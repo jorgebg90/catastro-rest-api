@@ -4,8 +4,15 @@ The Actor runs in **Standby mode** (`usesStandbyMode: true` in `.actor/actor.jso
 
 ## 1. Preparation
 
+Install the Apify CLI globally (`apify: command not found` means it is not installed yet):
+
 ```bash
 npm install -g apify-cli
+```
+
+Or skip the installation and prefix every command in this guide with `npx apify-cli` (for example `npx apify-cli validate-schema`).
+
+```bash
 apify login
 npm run lint && npm run typecheck && npm test && npm run build
 apify validate-schema
