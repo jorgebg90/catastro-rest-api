@@ -1,56 +1,56 @@
-# Descargo de responsabilidad y términos de uso
+# Legal disclaimer and terms of use
 
-> Documento informativo para el publicador del Actor en Apify. No constituye asesoramiento jurídico; conviene que lo revise un profesional antes de publicarlo en la Apify Store.
+> Informational document for the Actor publisher on Apify. It is not legal advice; have a professional review it before publishing on the Apify Store.
 
-## 1. Naturaleza del servicio
+## 1. Nature of the service
 
-Catastro REST API es una **pasarela técnica (wrapper)** que traduce a JSON/REST las consultas a los *Servicios Libres* de la Sede Electrónica del Catastro (`OVCSWLocalizacionRC`: `Consulta_DNPRC`, `ConsultaProvincia`, `ConsultaMunicipio`, `ConsultaVia`, `ConsultaNumero`, `Consulta_DNPLOC`, `Consulta_DNPPP`).
+Catastro REST API is a **technical gateway (wrapper)** that exposes the *Free Services* of the Spanish Cadastre electronic office (`OVCSWLocalizacionRC`: `Consulta_DNPRC`, `ConsultaProvincia`, `ConsultaMunicipio`, `ConsultaVia`, `ConsultaNumero`, `Consulta_DNPLOC`, `Consulta_DNPPP`) as JSON/REST.
 
-- No es un servicio oficial ni está afiliado, avalado ni patrocinado por la Dirección General del Catastro ni por el Ministerio de Hacienda.
-- No almacena ni modifica los datos: los transforma de XML a JSON.
-- Lo que se ofrece es el **servicio técnico** (formato JSON, disponibilidad, latencia, documentación OpenAPI y alojamiento en Apify), **no la propiedad de los datos catastrales**.
+- It is not an official service and is not affiliated with, endorsed or sponsored by the Dirección General del Catastro or the Spanish Ministry of Finance.
+- It does not store or alter the data: it only converts XML into JSON.
+- What is offered is the **technical service** (JSON format, availability, latency, OpenAPI documentation and Apify hosting), **not ownership of the cadastral data**.
 
-## 2. Origen de los datos y reutilización
+## 2. Data source and reuse
 
-- **Fuente:** Dirección General del Catastro (https://www.catastro.hacienda.gob.es). Cualquier uso o redistribución de los datos debe citarla.
-- **Marco legal:** Ley 37/2007, de 16 de noviembre, sobre reutilización de la información del sector público, y sus directivas europeas derivadas. La información no protegida (referencia catastral, localización, superficie, uso, antigüedad) es de carácter público y reutilizable, también con fines comerciales.
-- **Datos protegidos:** según el artículo 51 del Texto Refundido de la Ley del Catastro Inmobiliario, no pueden exponerse ni comercializarse por servicios libres la titularidad catastral (nombre, NIF, domicilio del titular) ni el valor catastral o los valores de referencia individualizados.
-- Este Actor solo consume los Servicios Libres, que ya devuelven únicamente datos no protegidos. No se solicita, procesa ni almacena información de titulares. Los usuarios no deben usar el Actor para intentar obtener datos protegidos.
-- Cada usuario es responsable del tratamiento que haga de los datos obtenidos (incluida la normativa de protección de datos que le sea aplicable).
+- **Source:** Dirección General del Catastro (https://www.catastro.hacienda.gob.es). Any use or redistribution of the data must cite it.
+- **Legal framework:** Law 37/2007 of 16 November on the reuse of public sector information, and the derived European directives. Non-protected information (cadastral reference, location, surface, use, age) is public and reusable, including for commercial purposes.
+- **Protected data:** under article 51 of the Consolidated Text of the Cadastre Law (Texto Refundido de la Ley del Catastro Inmobiliario), cadastral ownership (owner name, tax ID, address) and individual cadastral or reference values may not be exposed or marketed through free services.
+- This Actor only consumes the Free Services, which already return non-protected data only. It never requests, processes or stores owner information. Users must not try to use the Actor to obtain protected data.
+- Each user is responsible for how they process the data obtained, including any data protection rules that apply to them.
 
-## 3. Exención de responsabilidad
+## 3. Disclaimer of liability
 
-El servicio se presta «tal cual» y «según disponibilidad», sin garantías de ningún tipo.
+The service is provided "as is" and "as available", without warranties of any kind.
 
-- No se garantiza la disponibilidad ininterrumpida de la Sede Electrónica del Catastro. Si el Catastro falla o tarda, la API responde 502 o 504 (`CADASTRE_UNAVAILABLE`, `CADASTRE_PROTOCOL_ERROR`, `CADASTRE_TIMEOUT`).
-- No se garantiza la exactitud, integridad ni actualidad de la información, que es la que publica el Catastro. Los datos no tienen valor jurídico ni sustituyen a la certificación catastral oficial.
-- No se responde de los daños derivados del uso de la información (decisiones de compraventa, financieras, tributarias o de otro tipo).
-- Los nombres de calle deben coincidir con los del Catastro (por ejemplo `RU` + `DR CARLOS COLMEIRO LAFORE`); una búsqueda sin resultados no implica que el inmueble no exista.
+- Uninterrupted availability of the Cadastre electronic office is not guaranteed. If the Cadastre fails or is slow, the API answers 502 or 504 (`CADASTRE_UNAVAILABLE`, `CADASTRE_PROTOCOL_ERROR`, `CADASTRE_TIMEOUT`).
+- The accuracy, completeness and timeliness of the information, which is what the Cadastre publishes, are not guaranteed. The data has no legal value and does not replace the official cadastral certificate.
+- No liability is accepted for damages arising from the use of the information (sale, financial, tax or any other decisions).
+- Street names must match the Cadastre's own (for example `RU` + `DR CARLOS COLMEIRO LAFORE`); a search with no results does not mean the property does not exist.
 
-## 4. Uso razonable (fair use) y límites técnicos
+## 4. Fair use and technical limits
 
-La infraestructura del Catastro no admite abusos. Su Sede Electrónica puede bloquear de forma temporal o permanente las IP que realicen ataques de denegación de servicio o extracciones masivas.
+The Cadastre infrastructure does not tolerate abuse. Its electronic office may temporarily or permanently block IPs that perform denial-of-service attacks or mass scraping.
 
-- No uses el Actor para scraping masivo ni para barrer el callejero completo (`/streets` sin `streetName` devuelve listas muy grandes).
-- Limita la concurrencia y reutiliza resultados en tu lado cuando sea posible.
-- El Actor aplica *timeout* y reintentos acotados con *backoff* exponencial para no saturar al Catastro, pero no limita por sí mismo el número de peticiones de cada cliente.
-- El publicador puede suspender el acceso de quien haga un uso abusivo.
+- Do not use the Actor for mass scraping or to sweep the whole street directory (`/streets` without `streetName` returns very large lists).
+- Limit concurrency and reuse results on your side whenever possible.
+- The Actor applies timeouts and bounded retries with exponential backoff so as not to overload the Cadastre, but it does not itself limit the number of requests per client.
+- The publisher may suspend access for anyone making abusive use.
 
-Estado actual y mejoras recomendadas si el volumen crece (no implementadas en esta versión):
+Current status and recommended improvements if volume grows (not implemented in this version):
 
-- **Caché** de las respuestas ya consultadas (memoria, Redis o Key-Value Store de Apify), ya que los datos catastrales cambian poco.
-- **Apify Proxy** para distribuir las peticiones salientes. Es de pago y hay que configurarlo de forma explícita.
-- **Limitación de tasa** por cliente.
+- **Caching** of already queried responses (memory, Redis or the Apify Key-Value Store), since cadastral data changes rarely.
+- **Apify Proxy** to distribute outgoing requests. It is a paid feature and must be configured explicitly.
+- **Per-client rate limiting**.
 
-## 5. Texto sugerido para la ficha del Actor (README de la Apify Store)
+## 5. Suggested text for the Actor listing (Apify Store README)
 
-> **Fuente de los datos:** Dirección General del Catastro (Ministerio de Hacienda), reutilizados al amparo de la Ley 37/2007. Este Actor es una pasarela técnica independiente y no está afiliado ni respaldado por el Catastro. Solo accede a los Servicios Libres y a datos no protegidos; no devuelve titularidad ni valores catastrales. Se ofrece «tal cual», sin garantía de disponibilidad ni de exactitud de los datos. Los datos no sustituyen a la certificación catastral oficial. Haz un uso razonable del servicio.
+> **Data source:** Dirección General del Catastro (Spanish Ministry of Finance), reused under Law 37/2007. This Actor is an independent technical gateway and is not affiliated with or endorsed by the Cadastre. It only accesses the Free Services and non-protected data; it does not return ownership or cadastral values. It is provided "as is", with no guarantee of availability or data accuracy. The data does not replace the official cadastral certificate. Please use the service responsibly.
 
-## 6. Qué cubre el pago del servicio
+## 6. What the fee covers
 
-Si el Actor se monetiza en Apify, el precio remunera exclusivamente la transformación técnica, el formato JSON, la disponibilidad, la latencia y la documentación del servicio. La información catastral sigue siendo pública y su fuente es el Catastro.
+If the Actor is monetized on Apify, the price pays exclusively for the technical transformation, JSON format, availability, latency and documentation of the service. Cadastral information remains public and its source is the Cadastre.
 
-## 7. Pendiente (decisión del publicador)
+## 7. Open items (publisher's decision)
 
-- Incluir un campo de atribución en las respuestas (por ejemplo `source`). Hoy la atribución solo figura en la documentación.
-- Revisar con asesoría legal los Términos de Servicio definitivos y los de Apify Store aplicables a la monetización.
+- Add an attribution field to responses (for example `source`). Today attribution only appears in the documentation.
+- Have a lawyer review the final Terms of Service and the Apify Store terms that apply to monetization.

@@ -1,8 +1,8 @@
-# Quick guide: despliegue en Apify
+# Quick guide: deploying to Apify
 
-El Actor corre en **Standby mode** (`usesStandbyMode: true` en `.actor/actor.json`): Apify mantiene el contenedor activo y reenvía las peticiones HTTP.
+The Actor runs in **Standby mode** (`usesStandbyMode: true` in `.actor/actor.json`): Apify keeps the container alive and forwards HTTP requests to it.
 
-## 1. Preparación
+## 1. Preparation
 
 ```bash
 npm install -g apify-cli
@@ -11,47 +11,48 @@ npm run lint && npm run typecheck && npm test && npm run build
 apify validate-schema
 ```
 
-## 2. Desplegar
+## 2. Deploy
 
 ```bash
 apify push
 ```
 
-Esto sube el código y construye la imagen con el `Dockerfile` (`apify/actor-node:24`, `npm run build`, `node dist/main.js`). El Actor queda en tu cuenta con el nombre `catastro-rest-api`.
+This uploads the code and builds the image from the `Dockerfile` (`apify/actor-node:24`, `npm run build`, `node dist/main.js`). The Actor is created in your account as `catastro-rest-api`.
 
-## 3. Configurar en Apify Console
+## 3. Configure in Apify Console
 
-1. **Actor → Settings → Standby**: activa *Standby mode*. Ajusta *Max requests per run* / *Desired requests per run* y *Idle timeout* según tráfico (empieza con los valores por defecto).
-2. **Actor → Settings → Environment variables**: añade
-   - `CATASTRO_USE_PROXY=true` (evita el rate-limit por IP del Catastro; usa tu plan de proxy de Apify),
-   - opcional: `CATASTRO_TIMEOUT_MS`, `CATASTRO_RETRY_*`.
-   El puerto lo inyecta la plataforma (`ACTOR_STANDBY_PORT`).
-3. Marca las variables sensibles como *secret*. No pongas tokens en el código ni en logs.
+1. **Actor → Settings → Standby**: enable *Standby mode*. Tune *Max requests per run*, *Desired requests per run* and *Idle timeout* to your traffic (start with the defaults).
+2. **Actor → Settings → Environment variables**: add
+   - `CATASTRO_USE_PROXY=true` (avoids the Cadastre's per-IP rate limiting; uses your Apify proxy plan),
+   - optional: `CATASTRO_TIMEOUT_MS`, `CATASTRO_RETRY_*`.
 
-## 4. Probar
+   The port is injected by the platform (`ACTOR_STANDBY_PORT`).
+3. Mark sensitive variables as *secret*. Never put tokens in code or logs.
 
-URL Standby: `https://<usuario>--catastro-rest-api.apify.actor`
+## 4. Test
+
+Standby URL: `https://<username>--catastro-rest-api.apify.actor`
 
 ```bash
-curl -H "Authorization: Bearer $APIFY_TOKEN" \
-  https://<usuario>--catastro-rest-api.apify.actor/properties/9872023VH5797S0001WX
+curl -H "Authorization: Bearer <TOKEN>" \
+  https://<username>--catastro-rest-api.apify.actor/properties/9872023VH5797S0001WX
 ```
 
-Documentación HTML de la API desplegada: `https://<usuario>--catastro-rest-api.apify.actor/docs` (JSON OpenAPI en `/openapi.json`; usa el mismo token que arriba).
+Alternatively append `?token=<TOKEN>`. Also check a 404 with `9872023VH5797T` and a 400 with `ABC`, and review the logs in the *Runs/Logs* tab.
 
-(O añade `?token=<TOKEN>`.) Comprueba también el 404 con `9872023VH5797T` y el 400 con `ABC`, y revisa los logs en la pestaña *Runs/Logs*.
+The interactive API documentation (Swagger UI) is served at `https://<username>--catastro-rest-api.apify.actor/docs` and the OpenAPI JSON at `/openapi.json`; both need the same token.
 
-## 5. Actualizaciones
+## 5. Updates
 
-Cada `apify push` genera un nuevo build (`latest`). Para versiones fijas, define `version` y `buildTag` en `.actor/actor.json`. Si cambia el contrato HTTP, actualiza antes `specs/` y `contracts/rest-api.openapi.yaml`.
+Each `apify push` creates a new build (`latest`). For pinned versions, set `version` and `buildTag` in `.actor/actor.json`. If the HTTP contract changes, update `specs/` and `contracts/rest-api.openapi.yaml` first.
 
-## 6. Publicar en el Store (opcional)
+## 6. Publishing to the Store (optional)
 
-Rellena la ficha en Console (descripción, categoría, imagen). El `README.md` se usa como landing page.
+Fill in the listing in Console (description, category, image). `README.md` is used as the landing page. Before publishing, review [legal-disclaimer.md](legal-disclaimer.md).
 
 ## Checklist
 
-- [ ] `apify validate-schema` OK y tests en verde
-- [ ] `apify push` terminado y build correcto
-- [ ] Standby activado; `CATASTRO_USE_PROXY=true`
-- [ ] Probados 200 / 404 / 400 contra la URL Standby
+- [ ] `apify validate-schema` OK and tests green
+- [ ] `apify push` finished and build succeeded
+- [ ] Standby enabled; `CATASTRO_USE_PROXY=true`
+- [ ] 200 / 404 / 400 verified against the Standby URL

@@ -65,9 +65,9 @@ Transient upstream failures are retried with exponential backoff within a bounde
 
 ## Development
 
-- [Ejecución local y debugging (con y sin Docker)](docs/local-debugging.md)
-- [Quick guide de despliegue en Apify](docs/deployment.md)
-- [Descargo de responsabilidad y términos de uso](docs/legal-disclaimer.md)
+- [Local execution and debugging (with and without Docker)](docs/local-debugging.md)
+- [Quick guide: deploying to Apify](docs/deployment.md)
+- [Legal disclaimer and terms of use](docs/legal-disclaimer.md)
 
 ```bash
 npm install
