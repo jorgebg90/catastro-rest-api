@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  title: Catastro REST API
+  version: 1.1.0
+  description: REST wrapper over the Spanish Cadastre OVCCallejero service.
+paths:
+  /provinces:
+    get:
+      summary: List provinces
+      responses: { '200': { $ref: '#/components/responses/List' }, '502': { $ref: '#/components/responses/Error' }, '504': { $ref: '#/components/responses/Error' } }
+  /municipalities:
+    get:
+      summary: List municipalities of a province
+      parameters:
+        - { name: province, in: query, required: true, schema: { type: string } }
+        - { name: municipality, in: query, required: false, schema: { type: string } }
+      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /streets:
+    get:
+      summary: List streets of a municipality
+      parameters:
+        - { name: province, in: query, required: true, schema: { type: string } }
+        - { name: municipality, in: query, required: true, schema: { type: string } }
+        - { name: streetType, in: query, required: false, schema: { type: string } }
+        - { name: streetName, in: query, required: false, schema: { type: string } }
+      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /street-numbers:
+    get:
+      summary: List street numbers
+      parameters:
+        - { name: province, in: query, required: true, schema: { type: string } }
+        - { name: municipality, in: query, required: true, schema: { type: string } }
+        - { name: streetType, in: query, required: true, schema: { type: string } }
+        - { name: streetName, in: query, required: true, schema: { type: string } }
+        - { name: number, in: query, required: true, schema: { type: integer } }
+      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /properties:
+    get:
+      summary: Search properties by address or by polygon/parcel
+      description: Provide streetType+streetName+number (address) OR polygon+parcel (rustic). Mixing both returns 400.
+      parameters:
+        - { name: province, in: query, required: true, schema: { type: string } }
+        - { name: municipality, in: query, required: true, schema: { type: string } }
+        - { name: streetType, in: query, schema: { type: string } }
+        - { name: streetName, in: query, schema: { type: string } }
+        - { name: number, in: query, schema: { type: integer } }
+        - { name: block, in: query, schema: { type: string } }
+        - { name: staircase, in: query, schema: { type: string } }
+        - { name: floor, in: query, schema: { type: string } }
+        - { name: door, in: query, schema: { type: string } }
+        - { name: polygon, in: query, schema: { type: integer } }
+        - { name: parcel, in: query, schema: { type: integer } }
+      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /properties/{reference}:
+    get:
+      summary: Property by cadastral reference (SPEC-000)
+      parameters:
+        - { name: reference, in: path, required: true, schema: { type: string } }
+      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+  /openapi.json:
+    get: { summary: OpenAPI document, responses: { '200': { description: OpenAPI 3 JSON } } }
+  /docs:
+    get: { summary: HTML documentation, responses: { '200': { description: text/html } } }
+components:
+  responses:
+    List: { description: OK, content: { application/json: { schema: { type: object } } } }
+    Error: { description: Error, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: object, properties: { code: { type: string }, message: { type: string }, upstream: { type: object } } }
