@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<consulta_numerero xmlns="http://www.catastro.meh.es/">
+  <control>
+    <cunum>1</cunum>
+  </control>
+  <numerero>
+    <nump>
+      <pc>
+        <pc1>1853111</pc1>
+        <pc2>VK4715D</pc2>
+      </pc>
+      <num>
+        <pnp>30</pnp>
+        <plp xml:space="preserve"> </plp>
+      </num>
+    </nump>
+  </numerero>
+</consulta_numerero>
