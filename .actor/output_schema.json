@@ -1,0 +1,19 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "Catastro REST API output",
+    "description": "This Actor has no dataset output: it serves a REST API from the run's web server (Standby mode).",
+    "properties": {
+        "apiDocs": {
+            "type": "string",
+            "title": "API documentation (Swagger UI)",
+            "description": "Interactive documentation of the REST API served by the run's web server.",
+            "template": "{{run.containerUrl}}docs"
+        },
+        "openApi": {
+            "type": "string",
+            "title": "OpenAPI document",
+            "description": "OpenAPI 3.0 JSON describing every endpoint.",
+            "template": "{{run.containerUrl}}openapi.json"
+        }
+    }
+}

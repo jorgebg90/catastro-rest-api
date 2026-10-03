@@ -651,10 +651,7 @@
         "schemas": {
             "Error": {
                 "type": "object",
-                "required": [
-                    "code",
-                    "message"
-                ],
+                "required": ["code", "message"],
                 "properties": {
                     "code": {
                         "type": "string",
@@ -694,10 +691,7 @@
             },
             "Province": {
                 "type": "object",
-                "required": [
-                    "code",
-                    "name"
-                ],
+                "required": ["code", "name"],
                 "properties": {
                     "code": {
                         "type": "string",
@@ -722,9 +716,7 @@
             },
             "Municipality": {
                 "type": "object",
-                "required": [
-                    "name"
-                ],
+                "required": ["name"],
                 "properties": {
                     "name": {
                         "type": "string",
@@ -757,9 +749,7 @@
             },
             "Street": {
                 "type": "object",
-                "required": [
-                    "name"
-                ],
+                "required": ["name"],
                 "properties": {
                     "code": {
                         "type": "string",
@@ -788,10 +778,7 @@
             },
             "StreetNumberEntry": {
                 "type": "object",
-                "required": [
-                    "number",
-                    "cadastralReference14"
-                ],
+                "required": ["number", "cadastralReference14"],
                 "properties": {
                     "number": {
                         "type": "string",
@@ -841,11 +828,7 @@
             },
             "Property": {
                 "type": "object",
-                "required": [
-                    "reference",
-                    "address",
-                    "constructions"
-                ],
+                "required": ["reference", "address", "constructions"],
                 "properties": {
                     "reference": {
                         "type": "string",
@@ -853,10 +836,7 @@
                     },
                     "propertyClass": {
                         "type": "string",
-                        "enum": [
-                            "URBAN",
-                            "RUSTIC"
-                        ],
+                        "enum": ["URBAN", "RUSTIC"],
                         "nullable": true
                     },
                     "provinceCode": {

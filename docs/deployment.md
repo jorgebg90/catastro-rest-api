@@ -59,7 +59,7 @@ curl -H "Authorization: Bearer <TOKEN>" \
 
 Alternatively append `?token=<TOKEN>`. Also check a 404 with `9872023VH5797T` and a 400 with `ABC`, and review the logs in the *Runs/Logs* tab.
 
-The Actor page in Apify Console and the Store show an **Endpoints** tab (Swagger UI with automatic authentication) built from `webServerSchema` in `.actor/actor.json`, which points to `.actor/openapi.json`. That file is generated from the route table: after changing routes or parameters run `npm run generate:openapi` and commit the result (a test fails if it is out of date).
+The Actor page in Apify Console and the Store show an **Endpoints** tab (Swagger UI with automatic authentication) built from `webServerSchema` in `.actor/actor.json`, which points to `.actor/openapi.json`. The Actor also declares `.actor/output_schema.json`, which adds *API documentation* and *OpenAPI document* links to a run's output tab (built from `run.containerUrl`; they only work while the run is alive). That file is generated from the route table: after changing routes or parameters run `npm run generate:openapi` and commit the result (a test fails if it is out of date).
 
 The interactive API documentation (Swagger UI) is served at `https://<username>--catastro-rest-api.apify.actor/docs` and the OpenAPI JSON at `/openapi.json`; both need the same token.
 

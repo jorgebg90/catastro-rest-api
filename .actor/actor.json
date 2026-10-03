@@ -12,6 +12,7 @@
         "generatedBy": "Copilot SDK in VS Code"
     },
     "inputSchema": "./input_schema.json",
+    "output": "./output_schema.json",
     "webServerSchema": "./openapi.json",
     "dockerfile": "../Dockerfile"
 }
