@@ -42,7 +42,8 @@ describe('SPEC-000 traceability (FR-009)', () => {
     it('every test file references a scenario (or is a foundation test)', () => {
         const allowed = ['result.test.ts', 'errors.test.ts', 'property-record.test.ts', 'traceability.test.ts'];
         const spec001Only = unreferenced.filter((f) => readFileSync(f, 'utf8').includes('001:US'));
-        expect(unreferenced.filter((f) => !allowed.some((a) => f.endsWith(a)) && !spec001Only.includes(f))).toEqual([]);
+        const spec002Only = unreferenced.filter((f) => readFileSync(f, 'utf8').includes('002:US'));
+        expect(unreferenced.filter((f) => !allowed.some((a) => f.endsWith(a)) && !spec001Only.includes(f) && !spec002Only.includes(f))).toEqual([]);
     });
 });
 
