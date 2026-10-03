@@ -40,6 +40,19 @@ curl localhost:3000/openapi.json
 
 Respuestas: 200, 200 (inmueble), 200 (parcela con 11 inmuebles), 404 `PROPERTY_NOT_FOUND` y 400 `INVALID_CADASTRAL_REFERENCE`.
 
+### Documentación interactiva (Swagger UI)
+
+Con el servidor arrancado, abre en el navegador:
+
+```bash
+open http://localhost:3000/docs
+```
+
+- Lista todos los endpoints con sus parámetros, ejemplos y errores; el botón **Try it out** lanza peticiones reales contra `localhost:3000` (y por tanto contra el Catastro).
+- El documento OpenAPI en bruto está en `http://localhost:3000/openapi.json`; sirve para importarlo en Postman, Insomnia, etc.
+- Funciona sin internet: los assets salen del paquete `swagger-ui-dist` (sin CDN).
+- Si modificas rutas o parámetros, edita la tabla `src/presentation/docs/routes.ts`: de ella salen tanto el router como el OpenAPI, así que la documentación no se desincroniza.
+
 ### Debugger (VS Code)
 
 Añade esta configuración a `.vscode/launch.json` y pon breakpoints en `src/**`:
