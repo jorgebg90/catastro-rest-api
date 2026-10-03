@@ -22,7 +22,7 @@ const listSources = (dir: string): string[] =>
     });
 
 describe('SPEC-000 traceability (FR-009)', () => {
-    const ownScenario = /(?<!001:)\b(US\d-S\d)\b/g;
+    const ownScenario = /(?<!00[12]:)\b(US\d-S\d)\b/g;
     const spec = readFileSync(join(root, 'specs/000-property-by-cadastral-ref/spec.md'), 'utf8');
     const ids = new Set([...spec.matchAll(/\[(US\d-S\d)\]/g)].map((m) => m[1] as string));
     const files = listTests(join(root, 'tests'));

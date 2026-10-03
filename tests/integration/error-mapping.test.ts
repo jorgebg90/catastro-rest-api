@@ -7,7 +7,7 @@ import {
 } from '../../src/domain/errors/index.js';
 import { mapOperationErrors } from '../../src/infrastructure/mappers/error-mapper.js';
 
-describe('Error mapping: coordinate kind (SPEC-002 foundation)', () => {
+describe('Error mapping: coordinate kind (SPEC-002 foundation) [002:US1-S2, 002:US3-S2]', () => {
     it('code 16 maps to ReferenceNotFoundError', () => {
         const error = mapOperationErrors(
             [{ code: '16', description: 'PARA ESAS COORDENADAS NO HAY REFERENCIA DISPONIBLE' }],

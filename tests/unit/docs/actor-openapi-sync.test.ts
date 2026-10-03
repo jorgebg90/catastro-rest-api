@@ -13,6 +13,11 @@ describe('Actor web server schema', () => {
         expect(file).toEqual(JSON.parse(JSON.stringify(buildOpenApiDocument())));
     });
 
+    it('[002:US4-S2] the published file includes the coordinates endpoint', () => {
+        const file = JSON.parse(readFileSync(join(root, '.actor/openapi.json'), 'utf8')) as { paths: Record<string, unknown> };
+        expect(file.paths).toHaveProperty(['/coordinates/reference']);
+    });
+
     it('[001:US4-S3] actor.json references it', () => {
         const actor = JSON.parse(readFileSync(join(root, '.actor/actor.json'), 'utf8')) as { webServerSchema?: string };
         expect(actor.webServerSchema).toBe('./openapi.json');

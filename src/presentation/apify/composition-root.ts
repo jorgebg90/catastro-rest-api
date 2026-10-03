@@ -6,6 +6,7 @@ import {
     ListStreetNumbersUseCase,
     ListStreetsUseCase,
 } from '../../application/use-cases/catalog.use-cases.js';
+import { FindReferenceByCoordinatesUseCase } from '../../application/use-cases/find-reference-by-coordinates.use-case.js';
 import { GetPropertyByRefUseCase } from '../../application/use-cases/get-property-by-ref.use-case.js';
 import {
     SearchPropertiesByAddressUseCase,
@@ -21,6 +22,7 @@ import { createHttpServer } from './server.js';
 export interface AppConfig {
     readonly port: number;
     readonly endpoint: string;
+    readonly coordinatesEndpoint?: string;
     readonly timeoutMs: number;
     readonly retry?: RetryOptions;
     readonly proxyUrl?: string;
@@ -28,6 +30,8 @@ export interface AppConfig {
 }
 
 const DEFAULT_ENDPOINT = 'https://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCallejero.asmx';
+
+const DEFAULT_COORDINATES_ENDPOINT = 'https://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCoordenadas.asmx';
 
 const intFromEnv = (value: string | undefined, fallback: number): number => {
     const n = Number(value);
@@ -38,6 +42,7 @@ const intFromEnv = (value: string | undefined, fallback: number): number => {
 export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Omit<AppConfig, 'proxyUrl'> & { useProxy: boolean } => ({
     port: intFromEnv(env.ACTOR_STANDBY_PORT ?? env.ACTOR_WEB_SERVER_PORT, 3000),
     endpoint: env.CATASTRO_ENDPOINT ?? DEFAULT_ENDPOINT,
+    coordinatesEndpoint: env.CATASTRO_COORDINATES_ENDPOINT ?? DEFAULT_COORDINATES_ENDPOINT,
     timeoutMs: intFromEnv(env.CATASTRO_TIMEOUT_MS, 5000),
     retry: {
         maxAttempts: intFromEnv(env.CATASTRO_RETRY_ATTEMPTS, 3),
@@ -57,6 +62,7 @@ export const buildServer = (config: AppConfig): Server => {
     };
     const soap = new CatastroSoapGateway(options);
     const get = new CatastroGetGateway(options);
+    const coordinates = new CatastroGetGateway({ ...options, endpoint: config.coordinatesEndpoint ?? DEFAULT_COORDINATES_ENDPOINT });
     return createHttpServer({
         useCase: new GetPropertyByRefUseCase(soap),
         provinces: new ListProvincesUseCase(get),
@@ -65,6 +71,7 @@ export const buildServer = (config: AppConfig): Server => {
         streetNumbers: new ListStreetNumbersUseCase(get),
         searchByAddress: new SearchPropertiesByAddressUseCase(get),
         searchByParcel: new SearchPropertiesByParcelUseCase(get),
+        referenceByCoordinates: new FindReferenceByCoordinatesUseCase(coordinates),
         logger: config.logger ?? apifyLogger,
     });
 };

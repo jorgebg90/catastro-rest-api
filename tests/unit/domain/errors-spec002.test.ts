@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ReferenceNotFoundError } from '../../../src/domain/errors/index.js';
 
-describe('ReferenceNotFoundError (SPEC-002 foundation)', () => {
+describe('ReferenceNotFoundError (SPEC-002 foundation) [002:US1-S2]', () => {
     it('has code COORDINATE_NOT_FOUND', () => {
         const error = new ReferenceNotFoundError('No reference at coordinates', '16', 'PARA ESAS COORDENADAS NO HAY REFERENCIA DISPONIBLE');
         expect(error.code).toBe('COORDINATE_NOT_FOUND');

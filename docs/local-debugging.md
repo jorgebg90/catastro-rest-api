@@ -8,6 +8,7 @@ Requirements: Node.js ≥ 22 and `npm install`. The Apify CLI is optional (`npm 
 |----------|-------------|-------------|
 | `ACTOR_STANDBY_PORT` | `3000` | HTTP port |
 | `CATASTRO_ENDPOINT` | official endpoint | Useful to point to a mock |
+| `CATASTRO_COORDINATES_ENDPOINT` | official endpoint | Coordinates service (`OVCCoordenadas.asmx`); useful to point to a mock |
 | `CATASTRO_TIMEOUT_MS` | `5000` | Timeout per attempt |
 | `CATASTRO_RETRY_ATTEMPTS` / `_BASE_MS` / `_MAX_MS` / `_BUDGET_MS` | `3` / `200` / `1000` / `10000` | Retries with backoff |
 | `CATASTRO_USE_PROXY` | `false` | `true` uses the Apify proxy (requires an `apify login` session) |
@@ -35,10 +36,15 @@ curl "localhost:3000/streets?province=MADRID&municipality=MADRID&streetType=CL&s
 curl "localhost:3000/street-numbers?province=MADRID&municipality=MADRID&streetType=CL&streetName=SERRANO&number=30"
 curl "localhost:3000/properties?province=MADRID&municipality=MADRID&streetType=CL&streetName=SERRANO&number=30"
 curl "localhost:3000/properties?province=CIUDAD%20REAL&municipality=SANTA%20CRUZ%20DE%20MUDELA&polygon=1&parcel=1"
+curl "localhost:3000/coordinates/reference?longitude=-3.70720&latitude=40.41446"
+curl "localhost:3000/coordinates/reference?longitude=-3.70720&latitude=40.41446&srs=EPSG:4258"
+curl -i "localhost:3000/coordinates/reference?longitude=40.4&latitude=-3.7"
 curl localhost:3000/openapi.json
 ```
 
 The first five commands return: 200 (health), 200 (property), 200 (parcel with 11 properties), 404 `PROPERTY_NOT_FOUND` and 400 `INVALID_CADASTRAL_REFERENCE`.
+
+The coordinate commands return: 200 `0142208VK4704A`, 200 (same reference with `EPSG:4258`) and 404 `COORDINATE_NOT_FOUND` (longitude and latitude swapped). Longitude comes first, latitude second, both in decimal degrees with a dot. A point in the middle of a street belongs to no parcel and also returns 404; use a point inside a building or plot. Pass the returned `reference` to `/properties/{reference}`.
 
 Street names must match the Cadastre's own, which uses abbreviations and its own street types. Example: "Doutor Carlos Colmeiro Laforet" in Vigo is registered as `RU` + `DR CARLOS COLMEIRO LAFORE`. To find the exact name, search first by a fragment and without a street type:
 

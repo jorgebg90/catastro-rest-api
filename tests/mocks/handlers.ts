@@ -20,13 +20,13 @@ export const getResponse = (operation: string, fixture: string, status = 200) =>
         new HttpResponse(loadFixture(fixture), { status, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }),
     );
 
-/** MSW handler for OVCCoordenadas.asmx/Consulta_RCCOOR with query-param matching (SRS, Coordenada_X, Coordenada_Y). */
+/** MSW handler for OVCCoordenadas.asmx with query-param matching (SRS, Coordenada_X, Coordenada_Y). */
 export const coordinatesResponse = (
     matcher: { srs?: string; x?: string; y?: string },
     fixture: string,
     status = 200,
 ) =>
-    http.get(CATASTRO_COORDINATES_URL, ({ request }) => {
+    http.get(`${CATASTRO_COORDINATES_URL}/*`, ({ request }) => {
         const url = new URL(request.url);
         const srs = url.searchParams.get('SRS');
         const x = url.searchParams.get('Coordenada_X');

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ReferenceMatch } from '../../../src/domain/entities/reference-match.js';
 
-describe('ReferenceMatch (SPEC-002 foundation)', () => {
+describe('ReferenceMatch (SPEC-002 foundation) [002:US1-S1]', () => {
     it('combines parcel and sheet into reference', () => {
         const match = new ReferenceMatch({
             parcel: '0142208',

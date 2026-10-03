@@ -1,6 +1,7 @@
 import { InvalidCadastralReferenceError, InvalidQueryError } from '../../domain/errors/index.js';
 import { err, ok, type Result } from '../../domain/result.js';
 import { CadastralReference } from '../../domain/value-objects/cadastral-reference.js';
+import { Coordinate } from '../../domain/value-objects/coordinate.js';
 import {
     AddressQuery,
     MunicipalityQuery,
@@ -52,4 +53,22 @@ export const parsePropertySearch = (params: Params): Result<PropertySearch, Inva
     }
     const q = AddressQuery.from(values);
     return q.ok ? ok({ kind: 'address', query: q.value }) : q;
+};
+
+const DECIMAL = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
+
+/** Empty or absent -> undefined (missing); anything that is not a plain decimal -> NaN (invalid). */
+const toNumber = (value: string | null): number | undefined => {
+    const trimmed = (value ?? '').trim();
+    if (trimmed === '') return undefined;
+    return DECIMAL.test(trimmed) ? Number(trimmed) : Number.NaN;
+};
+
+export const parseCoordinate = (params: Params): Result<Coordinate, InvalidQueryError> => {
+    const srs = params.get('srs');
+    return Coordinate.from({
+        longitude: toNumber(params.get('longitude')),
+        latitude: toNumber(params.get('latitude')),
+        ...(srs !== null && srs.trim() !== '' ? { srs } : {}),
+    });
 };

@@ -14,6 +14,7 @@ Synchronous REST API over the Spanish Cadastre (Catastro) `Consulta_DNPRC` SOAP 
 | GET | `/streets?province=&municipality=&streetType=&streetName=` | Streets of a municipality |
 | GET | `/street-numbers?province=&municipality=&streetType=&streetName=&number=` | Street numbers with their 14-char parcel reference |
 | GET | `/properties?...` | Search by address (`streetType`, `streetName`, `number`, optional `block`, `staircase`, `floor`, `door`) or by `polygon` + `parcel`; not both |
+| GET | `/coordinates/reference?longitude=&latitude=&srs=` | 14-char cadastral reference of the parcel containing a point (WGS84 by default; `EPSG:4258` also accepted). 404 `COORDINATE_NOT_FOUND` when the point is outside any parcel |
 | GET | `/properties/{reference}` | Property data for a 20-character reference, or the list of properties for a 14-character parcel reference |
 
 ```bash
@@ -61,7 +62,7 @@ Transient upstream failures are retried with exponential backoff within a bounde
 
 ## Configuration (environment variables)
 
-`ACTOR_STANDBY_PORT`, `CATASTRO_ENDPOINT`, `CATASTRO_TIMEOUT_MS` (5000), `CATASTRO_RETRY_ATTEMPTS` (3), `CATASTRO_RETRY_BASE_MS` (200), `CATASTRO_RETRY_MAX_MS` (1000), `CATASTRO_RETRY_BUDGET_MS` (10000), `CATASTRO_USE_PROXY` (`true` routes Cadastre calls through the Apify proxy; default off).
+`ACTOR_STANDBY_PORT`, `CATASTRO_ENDPOINT`, `CATASTRO_COORDINATES_ENDPOINT`, `CATASTRO_TIMEOUT_MS` (5000), `CATASTRO_RETRY_ATTEMPTS` (3), `CATASTRO_RETRY_BASE_MS` (200), `CATASTRO_RETRY_MAX_MS` (1000), `CATASTRO_RETRY_BUDGET_MS` (10000), `CATASTRO_USE_PROXY` (`true` routes Cadastre calls through the Apify proxy; default off).
 
 ## Development
 

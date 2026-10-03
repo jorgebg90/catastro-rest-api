@@ -32,9 +32,8 @@
   "parcel": "0142208",
   "sheet": "VK4704A",
   "address": "CL IMPERIAL 14 MADRID (MADRID)",
-  "coordinate": { "longitude": -3.7072, "latitude": 40.41446, "srs": "EPSG:4326" },
-  "source": "Dirección General del Catastro"
+  "coordinate": { "longitude": -3.7072, "latitude": 40.41446, "srs": "EPSG:4326" }
 }
 ```
 
-(`source` follows the attribution convention already used by the other endpoints; the implementation reuses the existing helper.)
+Attribution to the Dirección General del Catastro is given in the documentation and the legal disclaimer, as for the other endpoints.

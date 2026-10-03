@@ -67,6 +67,24 @@ const SCHEMAS: Json = {
             constructions: { type: 'array', items: { $ref: '#/components/schemas/Construction' } },
         },
     },
+    ReferenceByCoordinates: {
+        type: 'object',
+        required: ['reference', 'parcel', 'sheet', 'address', 'coordinate'],
+        properties: {
+            reference: { type: 'string', description: '14-character cadastral reference.', example: '0142208VK4704A' },
+            parcel: { type: 'string', example: '0142208' },
+            sheet: { type: 'string', example: 'VK4704A' },
+            address: { type: 'string', example: 'CL IMPERIAL 14 MADRID (MADRID)' },
+            coordinate: {
+                type: 'object',
+                properties: {
+                    longitude: { type: 'number', example: -3.7072 },
+                    latitude: { type: 'number', example: 40.41446 },
+                    srs: { type: 'string', example: 'EPSG:4326' },
+                },
+            },
+        },
+    },
     PropertyList: { type: 'object', properties: { properties: { type: 'array', items: { $ref: '#/components/schemas/Property' } } } },
     PropertyByReference: {
         type: 'object',
@@ -104,8 +122,8 @@ export const buildOpenApiDocument = (): Json => {
                     in: p.in,
                     required: p.required,
                     description: p.description,
-                    schema: { type: p.type },
-                    example: p.type === 'integer' ? Number(p.example) : p.example,
+                    schema: { type: p.type, ...(p.enum ? { enum: p.enum } : {}), ...(p.default ? { default: p.default } : {}) },
+                    example: p.type === 'string' ? p.example : Number(p.example),
                 })),
                 responses: { '200': ok, ...Object.fromEntries(route.errorStatuses.map((s) => [String(s), errorResponse(s)])) },
             },
@@ -116,7 +134,7 @@ export const buildOpenApiDocument = (): Json => {
         info: {
             title: 'Catastro REST API',
             version: '1.1.0',
-            description: 'Synchronous REST wrapper over the Spanish Cadastre (Catastro) OVCCallejero web service.',
+            description: 'Synchronous REST wrapper over the Spanish Cadastre (Catastro) web services.',
         },
         servers: [{ url: '/' }],
         paths,
