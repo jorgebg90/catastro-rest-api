@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<consulta_municipiero xmlns="http://www.catastro.meh.es/">
+  <control>
+    <cumun>2</cumun>
+  </control>
+  <municipiero>
+    <muni>
+      <nm>ALCALA DE HENARES</nm>
+      <locat>
+        <cd>28</cd>
+        <cmc>5</cmc>
+      </locat>
+      <loine>
+        <cp>28</cp>
+        <cm>5</cm>
+      </loine>
+    </muni>
+    <muni>
+      <nm>VALVERDE DE ALCALA</nm>
+      <locat>
+        <cd>28</cd>
+        <cmc>166</cmc>
+      </locat>
+      <loine>
+        <cp>28</cp>
+        <cm>166</cm>
+      </loine>
+    </muni>
+  </municipiero>
+</consulta_municipiero>

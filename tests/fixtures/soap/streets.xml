@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<consulta_callejero xmlns="http://www.catastro.meh.es/">
+  <control>
+    <cuca>1</cuca>
+  </control>
+  <callejero>
+    <calle>
+      <dir>
+        <cv>5757</cv>
+        <tv>CL</tv>
+        <nv>SERRANO</nv>
+      </dir>
+    </calle>
+  </callejero>
+</consulta_callejero>

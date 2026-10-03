@@ -15,7 +15,11 @@ const referenceOf = (rc: { pc1: string; pc2: string; car: string; cc1?: string |
 
 const composeAddress = (dt: DtData | undefined): string => {
     const urb = dt?.locs?.lous?.lourb;
+    const rus = dt?.locs?.lors?.lorus;
     const parts = [
+        rus?.npa,
+        rus?.cpp?.cpo ? `Pol:${rus.cpp.cpo}` : undefined,
+        rus?.cpp?.cpa ? `Parc:${rus.cpp.cpa}` : undefined,
         urb?.dir?.tv,
         urb?.dir?.nv,
         urb?.dir?.pnp,

@@ -12,3 +12,9 @@ export const soapResponse = (fixture: string, status = 200) =>
     http.post(CATASTRO_URL, () =>
         new HttpResponse(loadFixture(fixture), { status, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }),
     );
+
+/** MSW handler for the upstream HTTP GET binding of one operation. */
+export const getResponse = (operation: string, fixture: string, status = 200) =>
+    http.get(`${CATASTRO_URL}/${operation}`, () =>
+        new HttpResponse(loadFixture(fixture), { status, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }),
+    );

@@ -45,3 +45,28 @@ export class CadastreProtocolError extends DomainError {
         super(message);
     }
 }
+
+export type InvalidQueryCode = 'MISSING_PARAMETER' | 'INVALID_PARAMETER' | 'AMBIGUOUS_QUERY';
+
+/** Rejected input for the catalogue and search operations (SPEC-001 FR-002). */
+export class InvalidQueryError extends DomainError {
+    public readonly code: InvalidQueryCode;
+
+    public constructor(code: InvalidQueryCode, message: string) {
+        super(message);
+        this.code = code;
+    }
+}
+
+/** Empty or unknown catalogue result (SPEC-001 US1-S6). */
+export class CatalogEntryNotFoundError extends DomainError {
+    public readonly code = 'CATALOG_ENTRY_NOT_FOUND';
+
+    public constructor(
+        message: string,
+        public readonly upstreamCode: string | null = null,
+        public readonly upstreamDescription: string | null = null,
+    ) {
+        super(message);
+    }
+}

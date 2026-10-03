@@ -88,8 +88,15 @@ describe('GET /properties/{reference}', () => {
     });
 
     it('500 INTERNAL_ERROR when the use case throws unexpectedly', async () => {
+        const unused = { execute: async () => Promise.reject(new Error('unused')) };
         const server = createHttpServer({
             useCase: { execute: async () => Promise.reject(new Error('boom')) },
+            provinces: unused,
+            municipalities: unused,
+            streets: unused,
+            streetNumbers: unused,
+            searchByAddress: unused,
+            searchByParcel: unused,
             logger: { info: () => undefined, error: () => undefined },
         });
         await new Promise<void>((resolve) => {

@@ -1,19 +1,66 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 
+import type {
+    IListMunicipalitiesUseCase,
+    IListProvincesUseCase,
+    IListStreetNumbersUseCase,
+    IListStreetsUseCase,
+} from '../../application/ports/catalog-use-cases.js';
 import type { IGetPropertyByRefUseCase } from '../../application/ports/get-property-by-ref-use-case.js';
+import type { ISearchPropertiesByAddressUseCase, ISearchPropertiesByParcelUseCase } from '../../application/ports/search-use-cases.js';
 import { err } from '../../domain/result.js';
-import { type HttpResponseData, internalErrorResponse, notFoundRouteResponse, toHttpResponse } from './http-mapper.js';
+import { renderHtml } from '../docs/html-renderer.js';
+import { buildOpenApiDocument } from '../docs/openapi.js';
+import { type HandlerKey, matchRoute } from '../docs/routes.js';
+import {
+    type HtmlResponseData,
+    type HttpResponseData,
+    internalErrorResponse,
+    notFoundRouteResponse,
+    toErrorResponse,
+    toHttpResponse,
+    toMunicipalitiesResponse,
+    toPropertiesResponse,
+    toProvincesResponse,
+    toStreetNumbersResponse,
+    toStreetsResponse,
+} from './http-mapper.js';
 import type { AppLogger } from './logger.js';
-import { parseReferenceInput } from './request-parser.js';
+import {
+    parseMunicipalityQuery,
+    parsePropertySearch,
+    parseReferenceInput,
+    parseStreetNumberQuery,
+    parseStreetQuery,
+} from './request-parser.js';
 
 export interface ServerDeps {
     readonly useCase: IGetPropertyByRefUseCase;
+    readonly provinces: IListProvincesUseCase;
+    readonly municipalities: IListMunicipalitiesUseCase;
+    readonly streets: IListStreetsUseCase;
+    readonly streetNumbers: IListStreetNumbersUseCase;
+    readonly searchByAddress: ISearchPropertiesByAddressUseCase;
+    readonly searchByParcel: ISearchPropertiesByParcelUseCase;
     readonly logger: AppLogger;
 }
 
-const send = (res: ServerResponse, { status, body }: HttpResponseData): void => {
-    res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(body));
+type RouteResponse = HttpResponseData | HtmlResponseData;
+
+interface Ctx {
+    readonly deps: ServerDeps;
+    readonly params: URLSearchParams;
+    readonly pathParams: Readonly<Record<string, string>>;
+}
+
+const send = (res: ServerResponse, response: RouteResponse): void => {
+    if ('html' in response) {
+        res.writeHead(response.status, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(response.html);
+        return;
+    }
+    res.writeHead(response.status, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(response.body));
 };
 
 const decodeSegment = (segment: string): string | null => {
@@ -34,23 +81,55 @@ const lookup = async (rawSegment: string, deps: ServerDeps): Promise<HttpRespons
     return response;
 };
 
+const search = async ({ deps, params }: Ctx): Promise<HttpResponseData> => {
+    const parsed = parsePropertySearch(params);
+    if (!parsed.ok) return toErrorResponse(parsed.error);
+    const result =
+        parsed.value.kind === 'address'
+            ? await deps.searchByAddress.execute(parsed.value.query)
+            : await deps.searchByParcel.execute(parsed.value.query);
+    const response = toPropertiesResponse(result);
+    deps.logger.info('Property search', { kind: parsed.value.kind, status: response.status });
+    return response;
+};
+
+const openApi = buildOpenApiDocument();
+const html = renderHtml(openApi);
+
+const HANDLERS: Readonly<Record<HandlerKey, (ctx: Ctx) => Promise<RouteResponse>>> = {
+    status: async () => ({ status: 200, body: { status: 'ok', docs: '/docs' } }),
+    docs: async () => ({ status: 200, html }),
+    openapi: async () => ({ status: 200, body: openApi as Readonly<Record<string, unknown>> }),
+    provinces: async ({ deps }) => toProvincesResponse(await deps.provinces.execute()),
+    municipalities: async ({ deps, params }) => {
+        const q = parseMunicipalityQuery(params);
+        return q.ok ? toMunicipalitiesResponse(await deps.municipalities.execute(q.value)) : toErrorResponse(q.error);
+    },
+    streets: async ({ deps, params }) => {
+        const q = parseStreetQuery(params);
+        return q.ok ? toStreetsResponse(await deps.streets.execute(q.value)) : toErrorResponse(q.error);
+    },
+    streetNumbers: async ({ deps, params }) => {
+        const q = parseStreetNumberQuery(params);
+        return q.ok ? toStreetNumbersResponse(await deps.streetNumbers.execute(q.value)) : toErrorResponse(q.error);
+    },
+    properties: search,
+    propertyByReference: async ({ deps, pathParams }) => lookup(pathParams.reference ?? '', deps),
+};
+
 const handle = async (req: IncomingMessage, res: ServerResponse, deps: ServerDeps): Promise<void> => {
     if (req.headers['x-apify-container-server-readiness-probe']) {
         res.writeHead(200);
         res.end('ok');
         return;
     }
-    const path = new URL(req.url ?? '/', 'http://localhost').pathname;
-    if (req.method === 'GET' && path === '/') {
-        send(res, { status: 200, body: { status: 'ok' } });
+    const url = new URL(req.url ?? '/', 'http://localhost');
+    const match = matchRoute(req.method ?? 'GET', url.pathname);
+    if (!match) {
+        send(res, notFoundRouteResponse());
         return;
     }
-    const match = /^\/properties\/([^/]+)$/.exec(path);
-    if (req.method === 'GET' && match?.[1] !== undefined) {
-        send(res, await lookup(match[1], deps));
-        return;
-    }
-    send(res, notFoundRouteResponse());
+    send(res, await HANDLERS[match.route.handler]({ deps, params: url.searchParams, pathParams: match.pathParams }));
 };
 
 export const createHttpServer = (deps: ServerDeps): Server =>
@@ -61,4 +140,3 @@ export const createHttpServer = (deps: ServerDeps): Server =>
             else res.end();
         });
     });
-

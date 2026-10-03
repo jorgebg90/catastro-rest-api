@@ -7,6 +7,13 @@ Synchronous REST API over the Spanish Cadastre (Catastro) `Consulta_DNPRC` SOAP 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/` | Health check (also answers the Apify readiness probe) |
+| GET | `/docs` | HTML API documentation (self-contained) |
+| GET | `/openapi.json` | OpenAPI 3.0 document |
+| GET | `/provinces` | List all provinces |
+| GET | `/municipalities?province=&municipality=` | Municipalities of a province (name optional, prefix filter) |
+| GET | `/streets?province=&municipality=&streetType=&streetName=` | Streets of a municipality |
+| GET | `/street-numbers?province=&municipality=&streetType=&streetName=&number=` | Street numbers with their 14-char parcel reference |
+| GET | `/properties?...` | Search by address (`streetType`, `streetName`, `number`, optional `block`, `staircase`, `floor`, `door`) or by `polygon` + `parcel`; not both |
 | GET | `/properties/{reference}` | Property data for a 20-character reference, or the list of properties for a 14-character parcel reference |
 
 ```bash
@@ -39,6 +46,8 @@ Parcel (14-character) results list properties with location data only; `property
 | HTTP | `code` | Meaning |
 |------|--------|---------|
 | 400 | `INVALID_CADASTRAL_REFERENCE` | Malformed reference (rejected without calling the Cadastre) |
+| 400 | `MISSING_PARAMETER` / `INVALID_PARAMETER` / `AMBIGUOUS_QUERY` | Bad query parameters on the catalogue/search endpoints |
+| 404 | `CATALOG_ENTRY_NOT_FOUND` | Unknown province, municipality, street or number |
 | 404 | `PROPERTY_NOT_FOUND` | Unknown reference; body includes `upstream.code` and `upstream.description` |
 | 502 | `CADASTRE_UNAVAILABLE` / `CADASTRE_PROTOCOL_ERROR` | Cadastre failing or returning an unexpected payload |
 | 504 | `CADASTRE_TIMEOUT` | Cadastre too slow |

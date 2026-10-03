@@ -29,3 +29,10 @@
 
 ## R6. Fixtures
 - Capture real responses with curl (provinces, one municipality list, one street list, one number list, address list/single, parcel list, an error each) into `tests/fixtures/soap/` before writing parsers; strip nothing personal (Cadastre data is public, no owner data).
+
+## Findings from real captures (implementation)
+
+- `Consulta_DNPLOC` requires every parameter present (empty allowed); a missing one returns plain text `Missing parameter: X.` with HTTP 200.
+- `ConsultaNumero` entries carry a suffix (`num.plp`, usually blank).
+- Error mapping (supersedes R5): codes 5/12/33/43 or `NO EXISTE` → 404; codes 4/17/41 or `OBLIGATORI` → 400; anything else → 502 `CADASTRE_PROTOCOL_ERROR`.
+- Upstream is case-insensitive and accent-tolerant; names are only trimmed.
