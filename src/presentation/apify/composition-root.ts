@@ -1,6 +1,17 @@
 import type { Server } from 'node:http';
 
+import {
+    ListMunicipalitiesUseCase,
+    ListProvincesUseCase,
+    ListStreetNumbersUseCase,
+    ListStreetsUseCase,
+} from '../../application/use-cases/catalog.use-cases.js';
 import { GetPropertyByRefUseCase } from '../../application/use-cases/get-property-by-ref.use-case.js';
+import {
+    SearchPropertiesByAddressUseCase,
+    SearchPropertiesByParcelUseCase,
+} from '../../application/use-cases/search-properties.use-cases.js';
+import { CatastroGetGateway } from '../../infrastructure/soap/catastro-get-gateway.js';
 import { CatastroSoapGateway } from '../../infrastructure/soap/catastro-soap-gateway.js';
 import { createProxiedFetch } from '../../infrastructure/soap/proxy.js';
 import type { RetryOptions } from '../../infrastructure/soap/retry.js';
@@ -38,11 +49,22 @@ export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Omit<AppConfig
 });
 
 export const buildServer = (config: AppConfig): Server => {
-    const gateway = new CatastroSoapGateway({
+    const options = {
         endpoint: config.endpoint,
         timeoutMs: config.timeoutMs,
         ...(config.retry ? { retry: config.retry } : {}),
         ...(config.proxyUrl ? { fetchFn: createProxiedFetch(config.proxyUrl) } : {}),
+    };
+    const soap = new CatastroSoapGateway(options);
+    const get = new CatastroGetGateway(options);
+    return createHttpServer({
+        useCase: new GetPropertyByRefUseCase(soap),
+        provinces: new ListProvincesUseCase(get),
+        municipalities: new ListMunicipalitiesUseCase(get),
+        streets: new ListStreetsUseCase(get),
+        streetNumbers: new ListStreetNumbersUseCase(get),
+        searchByAddress: new SearchPropertiesByAddressUseCase(get),
+        searchByParcel: new SearchPropertiesByParcelUseCase(get),
+        logger: config.logger ?? apifyLogger,
     });
-    return createHttpServer({ useCase: new GetPropertyByRefUseCase(gateway), logger: config.logger ?? apifyLogger });
 };

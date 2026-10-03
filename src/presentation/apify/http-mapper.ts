@@ -1,8 +1,11 @@
+import type { Municipality, Province, Street, StreetNumberEntry } from '../../domain/entities/catalog.js';
 import type { PropertyRecord } from '../../domain/entities/property-record.js';
 import {
     CadastreTimeoutError,
+    CatalogEntryNotFoundError,
     type DomainError,
     InvalidCadastralReferenceError,
+    InvalidQueryError,
     PropertyNotFoundError,
 } from '../../domain/errors/index.js';
 import type { Result } from '../../domain/result.js';
@@ -10,6 +13,11 @@ import type { Result } from '../../domain/result.js';
 export interface HttpResponseData {
     readonly status: number;
     readonly body: Readonly<Record<string, unknown>>;
+}
+
+export interface HtmlResponseData {
+    readonly status: number;
+    readonly html: string;
 }
 
 const serialize = (p: PropertyRecord) => ({
@@ -34,10 +42,18 @@ const serialize = (p: PropertyRecord) => ({
 });
 
 const statusOf = (error: DomainError): number => {
-    if (error instanceof InvalidCadastralReferenceError) return 400;
-    if (error instanceof PropertyNotFoundError) return 404;
+    if (error instanceof InvalidCadastralReferenceError || error instanceof InvalidQueryError) return 400;
+    if (error instanceof PropertyNotFoundError || error instanceof CatalogEntryNotFoundError) return 404;
     if (error instanceof CadastreTimeoutError) return 504;
     return 502;
+};
+
+export const toErrorResponse = (error: DomainError): HttpResponseData => {
+    const body: Record<string, unknown> = { code: error.code, message: error.message };
+    if (error instanceof PropertyNotFoundError || error instanceof CatalogEntryNotFoundError) {
+        body.upstream = { code: error.upstreamCode, description: error.upstreamDescription };
+    }
+    return { status: statusOf(error), body };
 };
 
 export const toHttpResponse = (
@@ -47,13 +63,31 @@ export const toHttpResponse = (
     if (result.ok) {
         return { status: 200, body: { reference, properties: result.value.map(serialize) } };
     }
-    const { error } = result;
-    const body: Record<string, unknown> = { code: error.code, message: error.message };
-    if (error instanceof PropertyNotFoundError) {
-        body.upstream = { code: error.upstreamCode, description: error.upstreamDescription };
-    }
-    return { status: statusOf(error), body };
+    return toErrorResponse(result.error);
 };
+
+const listResponse = <T>(key: string, result: Result<readonly T[], DomainError>, map: (item: T) => unknown): HttpResponseData =>
+    result.ok ? { status: 200, body: { [key]: result.value.map(map) } } : toErrorResponse(result.error);
+
+export const toProvincesResponse = (r: Result<readonly Province[], DomainError>): HttpResponseData =>
+    listResponse('provinces', r, (p) => ({ code: p.code, name: p.name }));
+
+export const toMunicipalitiesResponse = (r: Result<readonly Municipality[], DomainError>): HttpResponseData =>
+    listResponse('municipalities', r, (m) => ({
+        name: m.name,
+        provinceCode: m.provinceCode,
+        ineCode: m.ineCode,
+        cadastralCode: m.cadastralCode,
+    }));
+
+export const toStreetsResponse = (r: Result<readonly Street[], DomainError>): HttpResponseData =>
+    listResponse('streets', r, (s) => ({ code: s.code, type: s.type, name: s.name }));
+
+export const toStreetNumbersResponse = (r: Result<readonly StreetNumberEntry[], DomainError>): HttpResponseData =>
+    listResponse('numbers', r, (n) => ({ number: n.number, suffix: n.suffix, cadastralReference14: n.cadastralReference14 }));
+
+export const toPropertiesResponse = (r: Result<readonly PropertyRecord[], DomainError>): HttpResponseData =>
+    listResponse('properties', r, serialize);
 
 export const internalErrorResponse = (): HttpResponseData => ({
     status: 500,

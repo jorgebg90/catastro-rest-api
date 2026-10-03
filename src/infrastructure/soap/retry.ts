@@ -35,3 +35,5 @@ export const withRetry = async <T>(
         attempt += 1;
     }
 };
+
+export const DEFAULT_RETRY: RetryOptions = { maxAttempts: 3, baseDelayMs: 200, maxDelayMs: 1000, totalBudgetMs: 8000 };

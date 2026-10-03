@@ -23,6 +23,13 @@ const dtSchema = z.object({
                         .optional(),
                 })
                 .optional(),
+            lors: z
+                .object({
+                    lorus: z
+                        .object({ npa: str, cpp: z.object({ cpo: str, cpa: str }).optional() })
+                        .optional(),
+                })
+                .optional(),
         })
         .optional(),
 });
@@ -44,20 +51,16 @@ const biSchema = z.object({
 
 const rcdnpSchema = z.object({ rc: rcSchema, dt: dtSchema.optional() });
 
-const responseSchema = z.object({
-    Envelope: z.object({
-        Body: z.object({
-            Consulta_DNP: z.object({
-                consulta_dnp: z.object({
-                    control: z.object({ cuerr: str }).optional(),
-                    lerr: z.object({ err: z.array(z.object({ cod: z.string(), des: str })) }).optional(),
-                    bico: z.object({ bi: biSchema, lcons: z.object({ cons: z.array(consSchema) }).optional() }).optional(),
-                    lrcdnp: z.object({ rcdnp: z.array(rcdnpSchema) }).optional(),
-                }),
-            }),
-        }),
-    }),
+const dnpSchema = z.object({
+    control: z.object({ cuerr: str }).optional(),
+    lerr: z.object({ err: z.array(z.object({ cod: z.string(), des: str })) }).optional(),
+    bico: z.object({ bi: biSchema, lcons: z.object({ cons: z.array(consSchema) }).optional() }).optional(),
+    lrcdnp: z.object({ rcdnp: z.array(rcdnpSchema) }).optional(),
 });
+
+const responseSchema = z.object({ Envelope: z.object({ Body: z.object({ Consulta_DNP: z.object({ consulta_dnp: dnpSchema }) }) }) });
+
+const getResponseSchema = z.object({ consulta_dnp: dnpSchema });
 
 export type DtData = z.infer<typeof dtSchema>;
 export type BiData = z.infer<typeof biSchema>;
@@ -83,18 +86,7 @@ const parser = new XMLParser({
     isArray: (name) => REPEATING.has(name),
 });
 
-export const parseCadastreXml = (xml: string): Result<ParsedCadastreResponse, CadastreProtocolError> => {
-    let raw: unknown;
-    try {
-        raw = parser.parse(xml);
-    } catch {
-        return err(new CadastreProtocolError('Cadastre response is not valid XML'));
-    }
-    const validated = responseSchema.safeParse(raw);
-    if (!validated.success) {
-        return err(new CadastreProtocolError('Cadastre response has an unexpected structure'));
-    }
-    const dnp = validated.data.Envelope.Body.Consulta_DNP.consulta_dnp;
+const interpret = (dnp: z.infer<typeof dnpSchema>): Result<ParsedCadastreResponse, CadastreProtocolError> => {
     if (dnp.lerr) {
         return ok({
             kind: 'error',
@@ -108,4 +100,32 @@ export const parseCadastreXml = (xml: string): Result<ParsedCadastreResponse, Ca
         return ok({ kind: 'success', data: { shape: 'parcel', items: dnp.lrcdnp.rcdnp } });
     }
     return err(new CadastreProtocolError('Cadastre response has neither data nor errors'));
+};
+
+const parseRaw = (xml: string): Result<unknown, CadastreProtocolError> => {
+    try {
+        return ok(parser.parse(xml));
+    } catch {
+        return err(new CadastreProtocolError('Cadastre response is not valid XML'));
+    }
+};
+
+const UNEXPECTED = 'Cadastre response has an unexpected structure';
+
+/** SOAP-wrapped `Consulta_DNPRC` response. */
+export const parseCadastreXml = (xml: string): Result<ParsedCadastreResponse, CadastreProtocolError> => {
+    const raw = parseRaw(xml);
+    if (!raw.ok) return raw;
+    const validated = responseSchema.safeParse(raw.value);
+    if (!validated.success) return err(new CadastreProtocolError(UNEXPECTED));
+    return interpret(validated.data.Envelope.Body.Consulta_DNP.consulta_dnp);
+};
+
+/** Plain (GET binding) `Consulta_DNPLOC` / `Consulta_DNPPP` response. */
+export const parseDnpXml = (xml: string): Result<ParsedCadastreResponse, CadastreProtocolError> => {
+    const raw = parseRaw(xml);
+    if (!raw.ok) return raw;
+    const validated = getResponseSchema.safeParse(raw.value);
+    if (!validated.success) return err(new CadastreProtocolError(UNEXPECTED));
+    return interpret(validated.data.consulta_dnp);
 };
