@@ -39,7 +39,8 @@
         "format:check": "prettier --check .",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "generate:openapi": "tsx scripts/generate-openapi.ts"
     },
     "author": "It's not you it's me",
     "license": "ISC"

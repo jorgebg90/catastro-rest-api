@@ -1,0 +1,936 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Catastro REST API",
+        "version": "1.1.0",
+        "description": "Synchronous REST wrapper over the Spanish Cadastre (Catastro) OVCCallejero web service."
+    },
+    "servers": [
+        {
+            "url": "/"
+        }
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "summary": "Service status",
+                "description": "Readiness and discovery endpoint. Returns the documentation location.",
+                "operationId": "status",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Status"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/docs": {
+            "get": {
+                "summary": "HTML documentation",
+                "description": "This page, rendered from the OpenAPI document.",
+                "operationId": "docs",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/openapi.json": {
+            "get": {
+                "summary": "OpenAPI document",
+                "description": "Machine-readable description of the whole API (OpenAPI 3.0).",
+                "operationId": "openapi",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/provinces": {
+            "get": {
+                "summary": "List provinces",
+                "description": "Every province with its INE code and name (upstream ConsultaProvincia).",
+                "operationId": "provinces",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvinceList"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "The Cadastre is unavailable or returned an unexpected response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "The Cadastre did not answer in time.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/municipalities": {
+            "get": {
+                "summary": "List municipalities of a province",
+                "description": "Municipalities of a province, optionally filtered by a name fragment (upstream ConsultaMunicipio).",
+                "operationId": "municipalities",
+                "parameters": [
+                    {
+                        "name": "province",
+                        "in": "query",
+                        "required": true,
+                        "description": "Province name (case and accents are ignored), e.g. MADRID.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "MADRID"
+                    },
+                    {
+                        "name": "municipality",
+                        "in": "query",
+                        "required": false,
+                        "description": "Municipality name or fragment, e.g. MADRID.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "MADRID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MunicipalityList"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or missing parameters (code MISSING_PARAMETER, INVALID_PARAMETER, AMBIGUOUS_QUERY or INVALID_CADASTRAL_REFERENCE).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nothing found for the given criteria.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "The Cadastre is unavailable or returned an unexpected response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "The Cadastre did not answer in time.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/streets": {
+            "get": {
+                "summary": "List streets of a municipality",
+                "description": "Streets of a municipality, optionally filtered by street type and a name fragment (upstream ConsultaVia). Without a name filter large municipalities return very long lists.",
+                "operationId": "streets",
+                "parameters": [
+                    {
+                        "name": "province",
+                        "in": "query",
+                        "required": true,
+                        "description": "Province name (case and accents are ignored), e.g. MADRID.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "MADRID"
+                    },
+                    {
+                        "name": "municipality",
+                        "in": "query",
+                        "required": true,
+                        "description": "Municipality name or fragment, e.g. MADRID.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "MADRID"
+                    },
+                    {
+                        "name": "streetType",
+                        "in": "query",
+                        "required": false,
+                        "description": "Street type abbreviation (1-5 letters), e.g. CL, AV.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "CL"
+                    },
+                    {
+                        "name": "streetName",
+                        "in": "query",
+                        "required": false,
+                        "description": "Street name or fragment.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "SERRANO"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StreetList"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or missing parameters (code MISSING_PARAMETER, INVALID_PARAMETER, AMBIGUOUS_QUERY or INVALID_CADASTRAL_REFERENCE).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nothing found for the given criteria.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "The Cadastre is unavailable or returned an unexpected response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "The Cadastre did not answer in time.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/street-numbers": {
+            "get": {
+                "summary": "List street numbers",
+                "description": "Entries of a street number with the 14-character parcel reference they belong to (upstream ConsultaNumero).",
+                "operationId": "streetNumbers",
+                "parameters": [
+                    {
+                        "name": "province",
+                        "in": "query",
+                        "required": true,
+                        "description": "Province name (case and accents are ignored), e.g. MADRID.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "MADRID"
+                    },
+                    {
+                        "name": "municipality",
+                        "in": "query",
+                        "required": true,
+                        "description": "Municipality name or fragment, e.g. MADRID.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "MADRID"
+                    },
+                    {
+                        "name": "streetType",
+                        "in": "query",
+                        "required": true,
+                        "description": "Street type abbreviation (1-5 letters).",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "CL"
+                    },
+                    {
+                        "name": "streetName",
+                        "in": "query",
+                        "required": true,
+                        "description": "Street name.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "SERRANO"
+                    },
+                    {
+                        "name": "number",
+                        "in": "query",
+                        "required": true,
+                        "description": "Street number (0-9999).",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 30
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StreetNumberList"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or missing parameters (code MISSING_PARAMETER, INVALID_PARAMETER, AMBIGUOUS_QUERY or INVALID_CADASTRAL_REFERENCE).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nothing found for the given criteria.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "The Cadastre is unavailable or returned an unexpected response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "The Cadastre did not answer in time.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/properties": {
+            "get": {
+                "summary": "Search properties by address or by polygon and parcel",
+                "description": "Provide either an address (streetType, streetName, number and optional block, staircase, floor, door; upstream Consulta_DNPLOC) or a rustic location (polygon and parcel; upstream Consulta_DNPPP). Mixing both or providing neither returns 400.",
+                "operationId": "properties",
+                "parameters": [
+                    {
+                        "name": "province",
+                        "in": "query",
+                        "required": true,
+                        "description": "Province name (case and accents are ignored), e.g. MADRID.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "MADRID"
+                    },
+                    {
+                        "name": "municipality",
+                        "in": "query",
+                        "required": true,
+                        "description": "Municipality name or fragment, e.g. MADRID.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "MADRID"
+                    },
+                    {
+                        "name": "streetType",
+                        "in": "query",
+                        "required": false,
+                        "description": "Address search: street type abbreviation.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "CL"
+                    },
+                    {
+                        "name": "streetName",
+                        "in": "query",
+                        "required": false,
+                        "description": "Address search: street name.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "SERRANO"
+                    },
+                    {
+                        "name": "number",
+                        "in": "query",
+                        "required": false,
+                        "description": "Address search: street number.",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 30
+                    },
+                    {
+                        "name": "block",
+                        "in": "query",
+                        "required": false,
+                        "description": "Address search: block (max 4 chars).",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "A"
+                    },
+                    {
+                        "name": "staircase",
+                        "in": "query",
+                        "required": false,
+                        "description": "Address search: staircase (max 4 chars).",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "1"
+                    },
+                    {
+                        "name": "floor",
+                        "in": "query",
+                        "required": false,
+                        "description": "Address search: floor (max 4 chars).",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "02"
+                    },
+                    {
+                        "name": "door",
+                        "in": "query",
+                        "required": false,
+                        "description": "Address search: door (max 4 chars).",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "A"
+                    },
+                    {
+                        "name": "polygon",
+                        "in": "query",
+                        "required": false,
+                        "description": "Parcel search: polygon number.",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    },
+                    {
+                        "name": "parcel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Parcel search: parcel number.",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PropertyList"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or missing parameters (code MISSING_PARAMETER, INVALID_PARAMETER, AMBIGUOUS_QUERY or INVALID_CADASTRAL_REFERENCE).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nothing found for the given criteria.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "The Cadastre is unavailable or returned an unexpected response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "The Cadastre did not answer in time.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/properties/{reference}": {
+            "get": {
+                "summary": "Property by cadastral reference",
+                "description": "Properties for a 14 (parcel) or 20 (property) character cadastral reference (upstream Consulta_DNPRC).",
+                "operationId": "propertyByReference",
+                "parameters": [
+                    {
+                        "name": "reference",
+                        "in": "path",
+                        "required": true,
+                        "description": "Cadastral reference (14 or 20 letters and digits).",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "9872023VH5797S0001WX"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PropertyByReference"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or missing parameters (code MISSING_PARAMETER, INVALID_PARAMETER, AMBIGUOUS_QUERY or INVALID_CADASTRAL_REFERENCE).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nothing found for the given criteria.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "The Cadastre is unavailable or returned an unexpected response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "The Cadastre did not answer in time.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Error": {
+                "type": "object",
+                "required": [
+                    "code",
+                    "message"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "example": "MISSING_PARAMETER"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "upstream": {
+                        "type": "object",
+                        "description": "Present on 404 responses: the Cadastre error code and description.",
+                        "properties": {
+                            "code": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "description": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    }
+                }
+            },
+            "Status": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "example": "ok"
+                    },
+                    "docs": {
+                        "type": "string",
+                        "example": "/docs"
+                    }
+                }
+            },
+            "Province": {
+                "type": "object",
+                "required": [
+                    "code",
+                    "name"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "example": "28"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "MADRID"
+                    }
+                }
+            },
+            "ProvinceList": {
+                "type": "object",
+                "properties": {
+                    "provinces": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Province"
+                        }
+                    }
+                }
+            },
+            "Municipality": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "ALCALA DE HENARES"
+                    },
+                    "provinceCode": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "ineCode": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cadastralCode": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "MunicipalityList": {
+                "type": "object",
+                "properties": {
+                    "municipalities": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Municipality"
+                        }
+                    }
+                }
+            },
+            "Street": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "type": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "SERRANO"
+                    }
+                }
+            },
+            "StreetList": {
+                "type": "object",
+                "properties": {
+                    "streets": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Street"
+                        }
+                    }
+                }
+            },
+            "StreetNumberEntry": {
+                "type": "object",
+                "required": [
+                    "number",
+                    "cadastralReference14"
+                ],
+                "properties": {
+                    "number": {
+                        "type": "string",
+                        "example": "30"
+                    },
+                    "suffix": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cadastralReference14": {
+                        "type": "string",
+                        "example": "1853111VK4715D"
+                    }
+                }
+            },
+            "StreetNumberList": {
+                "type": "object",
+                "properties": {
+                    "numbers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StreetNumberEntry"
+                        }
+                    }
+                }
+            },
+            "Construction": {
+                "type": "object",
+                "properties": {
+                    "use": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "floor": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "door": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "surfaceSquareMeters": {
+                        "type": "number",
+                        "nullable": true
+                    }
+                }
+            },
+            "Property": {
+                "type": "object",
+                "required": [
+                    "reference",
+                    "address",
+                    "constructions"
+                ],
+                "properties": {
+                    "reference": {
+                        "type": "string",
+                        "example": "9872023VH5797S0001WX"
+                    },
+                    "propertyClass": {
+                        "type": "string",
+                        "enum": [
+                            "URBAN",
+                            "RUSTIC"
+                        ],
+                        "nullable": true
+                    },
+                    "provinceCode": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "provinceName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "municipalityCode": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "municipalityName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "postalCode": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "use": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "surfaceSquareMeters": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "participationPercent": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "constructionYear": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "constructions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Construction"
+                        }
+                    }
+                }
+            },
+            "PropertyList": {
+                "type": "object",
+                "properties": {
+                    "properties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Property"
+                        }
+                    }
+                }
+            },
+            "PropertyByReference": {
+                "type": "object",
+                "properties": {
+                    "reference": {
+                        "type": "string"
+                    },
+                    "properties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Property"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
