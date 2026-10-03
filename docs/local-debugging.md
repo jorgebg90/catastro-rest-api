@@ -29,6 +29,13 @@ curl localhost:3000/properties/9872023VH5797S0001WX
 curl localhost:3000/properties/1853111VK4715D
 curl -i localhost:3000/properties/9872023VH5797T
 curl -i localhost:3000/properties/ABC
+curl localhost:3000/provinces
+curl "localhost:3000/municipalities?province=MADRID&municipality=alcala"
+curl "localhost:3000/streets?province=MADRID&municipality=MADRID&streetType=CL&streetName=SERRANO"
+curl "localhost:3000/street-numbers?province=MADRID&municipality=MADRID&streetType=CL&streetName=SERRANO&number=30"
+curl "localhost:3000/properties?province=MADRID&municipality=MADRID&streetType=CL&streetName=SERRANO&number=30"
+curl "localhost:3000/properties?province=CIUDAD%20REAL&municipality=SANTA%20CRUZ%20DE%20MUDELA&polygon=1&parcel=1"
+curl localhost:3000/openapi.json
 ```
 
 Respuestas: 200, 200 (inmueble), 200 (parcela con 11 inmuebles), 404 `PROPERTY_NOT_FOUND` y 400 `INVALID_CADASTRAL_REFERENCE`.
@@ -67,7 +74,9 @@ npx vitest run -t "US2-S2"
 npm run test:coverage
 ```
 
-Los tests no llaman al Catastro real: MSW intercepta las peticiones con los XML de `tests/fixtures/soap/`. Para ver el XML real: `curl` al endpoint SOAP descrito en `specs/000-property-by-cadastral-ref/contracts/cadastre-soap.md`.
+Los tests no llaman al Catastro real: MSW intercepta las peticiones con los XML de `tests/fixtures/soap/`. Para ver el XML real: `curl` al endpoint SOAP descrito en `specs/000-property-by-cadastral-ref/contracts/cadastre-soap.md` (referencia catastral) o al binding GET de `specs/001-catastro-full-api-openapi-docs/contracts/cadastre-get.md` (resto de operaciones).
+
+La documentación HTML de la API está en `http://localhost:3000/docs`.
 
 ### Comprobaciones previas
 

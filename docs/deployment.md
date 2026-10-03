@@ -37,6 +37,8 @@ curl -H "Authorization: Bearer $APIFY_TOKEN" \
   https://<usuario>--catastro-rest-api.apify.actor/properties/9872023VH5797S0001WX
 ```
 
+Documentación HTML de la API desplegada: `https://<usuario>--catastro-rest-api.apify.actor/docs` (JSON OpenAPI en `/openapi.json`; usa el mismo token que arriba).
+
 (O añade `?token=<TOKEN>`.) Comprueba también el 404 con `9872023VH5797T` y el 400 con `ABC`, y revisa los logs en la pestaña *Runs/Logs*.
 
 ## 5. Actualizaciones

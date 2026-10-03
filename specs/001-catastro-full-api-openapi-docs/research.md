@@ -22,7 +22,7 @@
 - **Consistency (FR-009)**: the router is built from `routes.ts`; a test asserts the set of `method path` pairs equals the OpenAPI `paths`, so adding a route without docs fails.
 
 ## R5. Errors
-- Reuse SPEC-000 mapping. New validation codes (`MISSING_PARAMETER`, `INVALID_PARAMETER`, `AMBIGUOUS_QUERY`) return 400 without an upstream call. Upstream codes 4/17 -> 400; 5 and 43 -> 404 with `upstream{code,description}`. Any other upstream code -> 502 (protocol error), as required by the spec edge cases.
+- Reuse SPEC-000 mapping. New validation codes (`MISSING_PARAMETER`, `INVALID_PARAMETER`, `AMBIGUOUS_QUERY`) return 400 without an upstream call. (Superseded by the findings below: 4/17/41 -> 400; 5/12/33/43 -> 404 with `upstream{code,description}`.) Any other upstream code -> 502 (protocol error), as required by the spec edge cases.
 
 ## R7. Name normalization
 - Name inputs are trimmed and passed to the upstream as given; case and accents are accepted (the upstream is case-insensitive, verified in T001). Codes are compared as given. Normalization lives in the input VOs (trim only), never in the gateway.
