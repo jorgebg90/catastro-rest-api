@@ -1,20 +1,16 @@
 {
     "$schema": "https://apify.com/schemas/v1/actor.ide.json",
     "actorSpecification": 1,
-    "name": "ts-standby",
-    "title": "Standby Actor in TypeScript",
-    "description": "Standby Actor in TypeScript.",
-    "version": "0.0",
+    "name": "catastro-rest-api",
+    "title": "Catastro REST API",
+    "description": "Synchronous REST API over the Spanish Cadastre (Catastro) Consulta_DNPRC SOAP service, served in Standby mode.",
+    "version": "0.1",
     "buildTag": "latest",
     "usesStandbyMode": true,
     "meta": {
         "templateId": "ts-standby",
-        "generatedBy": "<FILL-IN-MODEL>"
+        "generatedBy": "Copilot SDK in VS Code"
     },
     "inputSchema": "./input_schema.json",
-    "outputSchema": "./output_schema.json",
-    "storages": {
-        "dataset": "./dataset_schema.json"
-    },
     "dockerfile": "../Dockerfile"
 }

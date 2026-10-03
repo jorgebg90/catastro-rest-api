@@ -7,15 +7,20 @@
         "node": ">=22"
     },
     "dependencies": {
-        "apify": "^3.7.0"
+        "apify": "^3.7.0",
+        "fast-xml-parser": "^5.11.2",
+        "undici": "^8.11.2",
+        "zod": "^4.6.5"
     },
     "devDependencies": {
         "@apify/eslint-config": "^2.0.0",
         "@apify/tsconfig": "^0.2.0",
         "@types/node": "^24.0.0",
+        "@vitest/coverage-v8": "^5.0.3",
         "eslint": "^9.29.0",
         "eslint-config-prettier": "^10.1.5",
         "globals": "^17.0.0",
+        "msw": "^2.15.0",
         "prettier": "^3.5.3",
         "tsx": "^4.20.3",
         "typescript": "^6.0.0",
@@ -26,12 +31,14 @@
         "start": "npm run start:dev",
         "start:prod": "node dist/main.js",
         "start:dev": "tsx src/main.ts",
-        "build": "tsc",
+        "build": "tsc -p tsconfig.build.json",
         "lint": "eslint",
         "lint:fix": "eslint --fix",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
-        "test": "vitest run"
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "typecheck": "tsc --noEmit"
     },
     "author": "It's not you it's me",
     "license": "ISC"
