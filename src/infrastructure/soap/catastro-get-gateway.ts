@@ -1,9 +1,12 @@
 import type { Municipality, Province, Street, StreetNumberEntry } from '../../domain/entities/catalog.js';
 import type { PropertyRecord } from '../../domain/entities/property-record.js';
+import { ReferenceMatch } from '../../domain/entities/reference-match.js';
 import { CatalogEntryNotFoundError, type DomainError } from '../../domain/errors/index.js';
 import type { ICatalogGateway } from '../../domain/ports/catalog-gateway.js';
+import type { ICoordinateGateway } from '../../domain/ports/coordinate-gateway.js';
 import type { IPropertySearchGateway } from '../../domain/ports/property-search-gateway.js';
 import { err, ok, type Result } from '../../domain/result.js';
+import type { Coordinate } from '../../domain/value-objects/coordinate.js';
 import type { AddressQuery, MunicipalityQuery, ParcelQuery, StreetNumberQuery, StreetQuery } from '../../domain/value-objects/queries.js';
 import { parseDnpXml } from '../mappers/cadastre-xml-parser.js';
 import {
@@ -13,6 +16,7 @@ import {
     parseStreetNumbersXml,
     parseStreetsXml,
 } from '../mappers/catalog-xml-parser.js';
+import { parseCoordinateXml } from '../mappers/coordinate-xml-parser.js';
 import { mapOperationErrors } from '../mappers/error-mapper.js';
 import { mapToPropertyRecords } from '../mappers/property-mapper.js';
 import { fetchText } from './http-call.js';
@@ -27,8 +31,8 @@ export interface CatastroGetGatewayOptions {
 
 type Params = Readonly<Record<string, string | number>>;
 
-/** Upstream HTTP GET binding of the OVCCallejero operations (specs/001-.../contracts/cadastre-get.md). */
-export class CatastroGetGateway implements ICatalogGateway, IPropertySearchGateway {
+/** Upstream HTTP GET binding of the OVCCallejero and OVCCoordenadas operations. */
+export class CatastroGetGateway implements ICatalogGateway, IPropertySearchGateway, ICoordinateGateway {
     public constructor(private readonly options: CatastroGetGatewayOptions) {}
 
     public async listProvinces(): Promise<Result<readonly Province[], DomainError>> {
@@ -70,6 +74,28 @@ export class CatastroGetGateway implements ICatalogGateway, IPropertySearchGatew
             Poligono: q.polygon,
             Parcela: q.parcel,
         });
+    }
+
+    public async findReference(coordinate: Coordinate): Promise<Result<ReferenceMatch, DomainError>> {
+        const response = await this.call('Consulta_RCCOOR', {
+            SRS: coordinate.srs,
+            Coordenada_X: coordinate.longitude,
+            Coordenada_Y: coordinate.latitude,
+        });
+        if (!response.ok) return response;
+        const parsed = parseCoordinateXml(response.value);
+        if (!parsed.ok) return parsed;
+        if (parsed.value.kind === 'error') return err(mapOperationErrors(parsed.value.errors, 'coordinate'));
+        return ok(
+            new ReferenceMatch({
+                parcel: parsed.value.parcel,
+                sheet: parsed.value.sheet,
+                address: parsed.value.address,
+                longitude: parsed.value.longitude,
+                latitude: parsed.value.latitude,
+                srs: parsed.value.srs,
+            }),
+        );
     }
 
     private async call(operation: string, params: Params): Promise<Result<string, DomainError>> {

@@ -1,0 +1,16 @@
+openapi: 3.0.3
+info: { title: Catastro REST API (SPEC-002 additions), version: 1.0.0 }
+paths:
+  /coordinates/reference:
+    get:
+      summary: Cadastral reference of the parcel containing a point
+      parameters:
+        - { name: longitude, in: query, required: true, schema: { type: number, minimum: -180, maximum: 180 }, example: -3.7072 }
+        - { name: latitude, in: query, required: true, schema: { type: number, minimum: -90, maximum: 90 }, example: 40.41446 }
+        - { name: srs, in: query, required: false, schema: { type: string, enum: [EPSG:4326, EPSG:4258], default: EPSG:4326 } }
+      responses:
+        '200': { description: Parcel found }
+        '400': { description: Missing or invalid parameter (MISSING_PARAMETER, INVALID_PARAMETER) }
+        '404': { description: No parcel at the point (COORDINATE_NOT_FOUND) }
+        '502': { description: Cadastre error or protocol error }
+        '504': { description: Cadastre timeout }
