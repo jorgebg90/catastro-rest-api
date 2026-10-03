@@ -40,6 +40,13 @@ curl localhost:3000/openapi.json
 
 Respuestas: 200, 200 (inmueble), 200 (parcela con 11 inmuebles), 404 `PROPERTY_NOT_FOUND` y 400 `INVALID_CADASTRAL_REFERENCE`.
 
+Los nombres de calle deben coincidir con los del Catastro, que usa abreviaturas y su propio tipo de vía. Ejemplo: la calle «Doutor Carlos Colmeiro Laforet» de Vigo figura como `RU` + `DR CARLOS COLMEIRO LAFORE`. Para descubrir el nombre exacto, busca primero por un fragmento y sin tipo de vía:
+
+```bash
+curl "localhost:3000/streets?province=PONTEVEDRA&municipality=VIGO&streetName=COLMEIRO"
+curl "localhost:3000/properties?province=PONTEVEDRA&municipality=VIGO&streetType=RU&streetName=DR%20CARLOS%20COLMEIRO%20LAFORE&number=12"
+```
+
 ### Documentación interactiva (Swagger UI)
 
 Con el servidor arrancado, abre en el navegador:

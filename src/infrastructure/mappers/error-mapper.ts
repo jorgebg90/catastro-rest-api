@@ -27,10 +27,10 @@ export const mapCadastreErrors = (errors: readonly CadastreBusinessError[]): Dom
     return new CadastreProtocolError(`Cadastre error ${first.code}: ${first.description}`);
 };
 
-const NOT_FOUND_CODES = new Set(['5', '12', '33', '43']);
+const NOT_FOUND_CODES = new Set(['5', '10', '12', '33', '43']);
 const INVALID_CODES = new Set(['4', '17', '41']);
 
-const isNotFound = (e: CadastreBusinessError): boolean => NOT_FOUND_CODES.has(e.code) || /NO EXISTE/i.test(e.description);
+const isNotFound = (e: CadastreBusinessError): boolean => NOT_FOUND_CODES.has(e.code) || /NO EXISTE|NO HAY COINCIDENCIAS/i.test(e.description);
 const isInvalid = (e: CadastreBusinessError): boolean => INVALID_CODES.has(e.code) || /OBLIGATORI/i.test(e.description);
 
 export type OperationKind = 'catalog' | 'property';

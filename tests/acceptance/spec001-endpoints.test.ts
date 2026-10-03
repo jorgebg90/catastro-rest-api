@@ -90,6 +90,15 @@ describe('catalogue endpoints', () => {
     });
 });
 
+describe('street search without matches', () => {
+    it('[001:US1-S6] code 10 (no matching streets) gives 404, not 502', async () => {
+        mswServer.use(getResponse('ConsultaVia', 'street-no-match.xml'));
+        const r = await getJson(await start(), `/streets?${LOC}&streetType=CL&streetName=NOEXISTE`);
+        expect(r.status).toBe(404);
+        expect(r.body).toMatchObject({ code: 'CATALOG_ENTRY_NOT_FOUND', upstream: { code: '10' } });
+    });
+});
+
 describe('GET /properties', () => {
     it('[001:US2-S1] address search', async () => {
         mswServer.use(getResponse('Consulta_DNPLOC', 'dnploc-list.xml'));

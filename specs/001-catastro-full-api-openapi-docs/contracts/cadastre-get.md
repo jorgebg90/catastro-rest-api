@@ -18,4 +18,4 @@ Notes (verified with captured fixtures in `tests/fixtures/soap/`):
 - `num.plp` is the street-number suffix (usually blank).
 - Rustic properties come with `lors` (polygon/parcel) instead of an urban address.
 
-Error codes seen: 4 malformed, 5 not found, 12 province does not exist, 17 mandatory field, 33 street does not exist, 41 number mandatory, 43 no match. Mapping: 5/12/33/43 or `NO EXISTE` -> 404; 4/17/41 or `OBLIGATORI` -> 400; other -> 502.
+Error codes seen: 4 malformed, 5 not found, 10 no street matches, 12 province does not exist, 17 mandatory field, 33 street does not exist, 41 number mandatory, 43 no match. Mapping: 5/10/12/33/43 or `NO EXISTE`/`NO HAY COINCIDENCIAS` -> 404; 4/17/41 or `OBLIGATORI` -> 400; other -> 502.
