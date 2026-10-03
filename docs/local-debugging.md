@@ -58,6 +58,7 @@ open http://localhost:3000/docs
 - It lists every endpoint with its parameters, examples and errors; the **Try it out** button sends real requests to `localhost:3000` (and therefore to the Cadastre).
 - The raw OpenAPI document is at `http://localhost:3000/openapi.json`; import it into Postman, Insomnia, etc.
 - It works offline: assets come from the `swagger-ui-dist` package (no CDN).
+- After changing routes, run `npm run generate:openapi` to refresh `.actor/openapi.json` (used by the Apify Console **Endpoints** tab); a test fails if it is stale.
 - The OpenAPI document is hand-written from the route table `src/presentation/docs/routes.ts`, which also drives the router. If you change routes or parameters, edit that table and the docs stay in sync.
 
 ### Debugger (VS Code)
