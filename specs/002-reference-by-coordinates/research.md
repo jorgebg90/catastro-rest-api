@@ -31,7 +31,7 @@ Since the API validates input first, 75/77/79 are a defensive mapping only. Code
 
 ## R5. Response shape
 
-The 14-character parcel reference is `pc1` + `pc2` (7 + 7). Upstream also returns `ldt` (address text) and the echoed `xcen`/`ycen`/`srs`. A parcel reference differs from the 20-character property reference; `/properties/{reference}` accepts both (verified by SPEC-001 US1-S4 chain test to be added).
+The 14-character parcel reference is `pc1` + `pc2` (7 + 7). Upstream also returns `ldt` (address text) and the echoed `xcen`/`ycen`/`srs`. A parcel reference differs from the 20-character property reference; `/properties/{reference}` accepts both (SPEC-000 already handles parcel references); the chain is covered by acceptance scenario US1-S4.
 
 ## R6. Validation
 
