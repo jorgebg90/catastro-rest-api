@@ -166,13 +166,26 @@ describe('error consistency across endpoints', () => {
 });
 
 describe('documentation endpoints', () => {
-    it('[001:US4-S1] GET /docs serves self-contained HTML', async () => {
-        const res = await fetch(`${await start()}/docs`);
+    it('[001:US4-S1] GET /docs serves Swagger UI locally with its assets', async () => {
+        const base = await start();
+        const res = await fetch(`${base}/docs`);
         const body = await res.text();
         expect(res.status).toBe(200);
         expect(res.headers.get('content-type')).toContain('text/html');
-        expect(body).toContain('<code>/street-numbers</code>');
         expect(body).not.toMatch(/https?:\/\//);
+        const css = await fetch(`${base}/docs/assets/swagger-ui.css`);
+        expect([css.status, css.headers.get('content-type')]).toEqual([200, 'text/css; charset=utf-8']);
+        const bundle = await fetch(`${base}/docs/assets/swagger-ui-bundle.js`);
+        expect(bundle.status).toBe(200);
+        expect(await (await fetch(`${base}/docs/assets/init.js`)).text()).toContain('/openapi.json');
+    });
+
+    it('[001:US4-S1] only allowlisted docs assets are served', async () => {
+        const base = await start();
+        for (const path of ['/docs/assets/package.json', '/docs/assets/..%2f..%2fpackage.json', '/docs/assets/swagger-ui-bundle.js.map']) {
+            const res = await fetch(`${base}${path}`);
+            expect(res.status, path).toBe(404);
+        }
     });
 
     it('[001:US4-S2] GET /openapi.json serves OpenAPI 3', async () => {

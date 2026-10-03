@@ -7,7 +7,7 @@ Synchronous REST API over the Spanish Cadastre (Catastro) `Consulta_DNPRC` SOAP 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/` | Health check (also answers the Apify readiness probe) |
-| GET | `/docs` | HTML API documentation (self-contained) |
+| GET | `/docs` | Swagger UI (interactive docs, served locally from `swagger-ui-dist`; no third-party calls) |
 | GET | `/openapi.json` | OpenAPI 3.0 document |
 | GET | `/provinces` | List all provinces |
 | GET | `/municipalities?province=&municipality=` | Municipalities of a province (name optional, prefix filter) |

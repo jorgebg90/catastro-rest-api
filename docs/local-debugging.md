@@ -76,7 +76,7 @@ npm run test:coverage
 
 Los tests no llaman al Catastro real: MSW intercepta las peticiones con los XML de `tests/fixtures/soap/`. Para ver el XML real: `curl` al endpoint SOAP descrito en `specs/000-property-by-cadastral-ref/contracts/cadastre-soap.md` (referencia catastral) o al binding GET de `specs/001-catastro-full-api-openapi-docs/contracts/cadastre-get.md` (resto de operaciones).
 
-La documentación HTML de la API está en `http://localhost:3000/docs`.
+La documentación interactiva (Swagger UI, con "Try it out") está en `http://localhost:3000/docs`; lee el OpenAPI de `/openapi.json`, que se genera a mano desde la tabla de rutas `src/presentation/docs/routes.ts`. Los assets de Swagger UI salen del paquete `swagger-ui-dist`, sin CDN.
 
 ### Comprobaciones previas
 

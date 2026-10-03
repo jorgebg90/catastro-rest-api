@@ -9,9 +9,9 @@ import type {
 import type { IGetPropertyByRefUseCase } from '../../application/ports/get-property-by-ref-use-case.js';
 import type { ISearchPropertiesByAddressUseCase, ISearchPropertiesByParcelUseCase } from '../../application/ports/search-use-cases.js';
 import { err } from '../../domain/result.js';
-import { renderHtml } from '../docs/html-renderer.js';
 import { buildOpenApiDocument } from '../docs/openapi.js';
 import { type HandlerKey, matchRoute } from '../docs/routes.js';
+import { getDocsAsset, SWAGGER_INDEX_HTML } from '../docs/swagger-ui.js';
 import {
     type HtmlResponseData,
     type HttpResponseData,
@@ -94,11 +94,10 @@ const search = async ({ deps, params }: Ctx): Promise<HttpResponseData> => {
 };
 
 const openApi = buildOpenApiDocument();
-const html = renderHtml(openApi);
 
 const HANDLERS: Readonly<Record<HandlerKey, (ctx: Ctx) => Promise<RouteResponse>>> = {
     status: async () => ({ status: 200, body: { status: 'ok', docs: '/docs' } }),
-    docs: async () => ({ status: 200, html }),
+    docs: async () => ({ status: 200, html: SWAGGER_INDEX_HTML }),
     openapi: async () => ({ status: 200, body: openApi as Readonly<Record<string, unknown>> }),
     provinces: async ({ deps }) => toProvincesResponse(await deps.provinces.execute()),
     municipalities: async ({ deps, params }) => {
@@ -124,6 +123,12 @@ const handle = async (req: IncomingMessage, res: ServerResponse, deps: ServerDep
         return;
     }
     const url = new URL(req.url ?? '/', 'http://localhost');
+    const asset = req.method === 'GET' ? getDocsAsset(url.pathname) : null;
+    if (asset) {
+        res.writeHead(200, { 'Content-Type': asset.contentType, 'Cache-Control': 'public, max-age=3600' });
+        res.end(asset.body);
+        return;
+    }
     const match = matchRoute(req.method ?? 'GET', url.pathname);
     if (!match) {
         send(res, notFoundRouteResponse());

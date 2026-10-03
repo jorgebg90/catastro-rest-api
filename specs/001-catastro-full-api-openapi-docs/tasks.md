@@ -64,7 +64,7 @@
 - [X] T030 [P] [US4] Tests for `renderHtml` (lists every endpoint and parameter, no `http(s)://` external asset/script references, escapes content) in `tests/unit/docs/html-renderer.test.ts` [US4-S1]
 - [X] T031 [P] [US4] Acceptance tests for `/docs` (text/html) and `/openapi.json` (valid JSON, 3.0.x), readiness probe unaffected, and no env values or proxy URLs present in either response body, in `tests/acceptance/docs-endpoints.test.ts` [US4-S1, S2, S4]
 - [X] T033 [US4] Create `src/presentation/docs/openapi.ts` (typed OpenAPI 3.0.3 object covering all endpoints, schemas, error bodies, examples; aligned with `contracts/rest-api.openapi.yaml`)
-- [X] T034 [US4] Create `src/presentation/docs/html-renderer.ts` (self-contained HTML + inline CSS, no external requests, HTML-escaped)
+- [X] T034 [US4] Superseded: `src/presentation/docs/swagger-ui.ts` serves Swagger UI from `swagger-ui-dist` (was html-renderer.ts: self-contained HTML + inline CSS, no external requests, HTML-escaped)
 - [X] T035 [US4] Wire `/docs` and `/openapi.json` in the server; keep the readiness probe unchanged and add `docs: "/docs"` to the `GET /` JSON body (FR-007)
 
 ## Phase 7: Polish
