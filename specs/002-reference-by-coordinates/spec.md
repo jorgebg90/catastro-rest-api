@@ -17,6 +17,12 @@ The Cadastre exposes this in a separate service (`OVCCoordenadas`, operation `Co
 
 The nearest-parcels search (`Consulta_RCCOOR_Distancia`) is **out of scope**.
 
+## Clarifications
+
+### Session 2026-10-03
+
+- Q: Which coordinate systems are accepted? → A: Only geographic: `EPSG:4326` (default) and `EPSG:4258`; no projected systems.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Find the cadastral reference of a point (Priority: P1)
@@ -36,18 +42,18 @@ A consumer sends a longitude and latitude and receives the cadastral reference o
 
 ---
 
-### User Story 2 - Use other coordinate reference systems (Priority: P2)
+### User Story 2 - Choose the geographic datum (Priority: P2)
 
-A consumer holding projected coordinates (for example UTM zone 30N, common in Spanish GIS data) can state the reference system and get the same result.
+A consumer can state whether the longitude/latitude are WGS84 (default) or ETRS89 and get the same result.
 
-**Why this priority**: Official Spanish geodata is frequently in ETRS89/UTM; WGS84 alone covers most pin/GPS use cases but not all.
+**Why this priority**: GPS and web maps use WGS84, while official Spanish geodata uses ETRS89; both are geographic and interchangeable at this precision.
 
-**Independent Test**: Request the same parcel once in WGS84 and once in `EPSG:25830` and verify both return the same reference.
+**Independent Test**: Request the same point with `EPSG:4326` and `EPSG:4258` and verify both return the same reference.
 
 **Acceptance Scenarios**:
 
-1. **[US2-S1]** **Given** a supported reference system code and matching coordinates, **When** the consumer sends them, **Then** the same parcel reference as the equivalent WGS84 point is returned.
-2. **[US2-S2]** **Given** an unsupported or malformed reference system code, **When** the consumer sends it, **Then** the response is 400 and lists the supported systems, without a call to the Cadastre.
+1. **[US2-S1]** **Given** a point and `srs=EPSG:4258`, **When** the consumer sends it, **Then** the same parcel reference as the equivalent `EPSG:4326` request is returned.
+2. **[US2-S2]** **Given** any other `srs` value (including projected systems such as UTM or Web Mercator), **When** the consumer sends it, **Then** the response is 400 listing the supported systems, without a call to the Cadastre.
 
 ---
 
@@ -85,12 +91,14 @@ The new endpoint appears in `/docs`, `/openapi.json` and the Apify Endpoints tab
 ### Edge Cases
 
 - Coordinates swapped (latitude in the longitude field): a value outside the valid range is rejected with 400; a value in range but swapped most likely yields "no reference" (404).
+- A longitude/latitude pair valid in range but swapped: verified to return "no reference" (404).
 - Decimal separator: only a dot is accepted; a comma gives 400.
 - Extra precision (many decimals) and values in scientific notation: accepted if they are finite numbers.
 - Coordinates inside Spain but in an area without cadastral coverage (sea, foreign territory): 404 "no reference".
 - Cadastre territories with different coverage (for example the Basque Country and Navarre are managed by their own provincial authorities): treated as "no reference" if the Cadastre says so; no special handling.
 - A very high number of requests for the same point: not cached in this version; consumers should reuse results.
 - Reference-system code in lowercase or with spaces: normalized (trimmed, case-insensitive) before validation.
+- The Cadastre also accepts projected systems and ED50 (verified); they are deliberately not exposed in this version.
 
 ## Requirements *(mandatory)*
 
@@ -98,10 +106,10 @@ The new endpoint appears in `/docs`, `/openapi.json` and the Apify Endpoints tab
 
 - **FR-001**: The system MUST expose `GET /coordinates/reference` accepting `longitude` and `latitude` and returning the cadastral reference of the parcel containing the point.
 - **FR-002**: The 200 response MUST contain the 14-character parcel reference, its two 7-character components, the address text, and the coordinates and reference system the Cadastre echoed.
-- **FR-003**: The system MUST accept an optional `srs` parameter (default `EPSG:4326`) restricted to a documented list of supported reference systems, including at least `EPSG:4326`, `EPSG:4258` and the ETRS89/UTM zones used in Spain (`EPSG:25828`, `EPSG:25829`, `EPSG:25830`, `EPSG:25831`). When `srs` is not geographic, the same `longitude`/`latitude` parameters carry the easting (X) and northing (Y) values.
-- **FR-004**: The system MUST validate input before calling the Cadastre: both coordinates present, finite numbers, within the valid range of the chosen system; `srs` in the supported list. Failures MUST return 400 with `MISSING_PARAMETER` or `INVALID_PARAMETER`.
+- **FR-003**: The system MUST accept an optional `srs` parameter (default `EPSG:4326`) restricted to the geographic systems `EPSG:4326` and `EPSG:4258`. Projected systems (UTM, Web Mercator) are not supported, so `longitude` and `latitude` always mean degrees.
+- **FR-004**: The system MUST validate input before calling the Cadastre: both coordinates present, finite numbers, within -180..180 (longitude) and -90..90 (latitude); `srs` in the supported list. Failures MUST return 400 with `MISSING_PARAMETER` or `INVALID_PARAMETER`.
 - **FR-005**: A point with no parcel (Cadastre business error 16) MUST return 404 with a `COORDINATE_NOT_FOUND`-style error code and the upstream `code` and `description` in the body.
-- **FR-006**: Cadastre business errors that indicate rejected input (for example 75 missing system, 77 non-numeric X, and the equivalent for Y) MUST map to 400; any other business error MUST map to 502 `CADASTRE_PROTOCOL_ERROR`.
+- **FR-006**: Cadastre business errors that indicate rejected input (for example 75 missing system, 77 non-numeric X, 79 missing Y) MUST map to 400; any other business error MUST map to 502 `CADASTRE_PROTOCOL_ERROR`.
 - **FR-007**: Timeouts, upstream 5xx, network errors and retries MUST behave exactly as in the existing endpoints (504, 502, bounded exponential backoff, optional Apify proxy).
 - **FR-008**: The endpoint MUST return only public, non-protected data (no ownership or cadastral values), as defined by the legal disclaimer.
 - **FR-009**: The endpoint MUST be documented from the single route table that drives the router and the OpenAPI document, and the Actor's published OpenAPI file MUST be regenerated and verified by an automated check.
@@ -110,16 +118,16 @@ The new endpoint appears in `/docs`, `/openapi.json` and the Apify Endpoints tab
 
 ### Key Entities
 
-- **Coordinate**: a pair of numbers (X/longitude, Y/latitude) plus a reference system code.
+- **Coordinate**: a longitude/latitude pair in degrees plus a reference system code.
 - **Parcel reference match**: the 14-character cadastral parcel reference containing the point, its address text, and the coordinate echoed by the Cadastre.
-- **Supported reference system**: an allowed coordinate system code with its valid ranges.
+- **Supported reference system**: `EPSG:4326` or `EPSG:4258`.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
 - **SC-001**: A consumer with a coordinate inside a parcel gets the cadastral reference in a single request, with no prior knowledge of the address.
-- **SC-002**: The same physical point expressed in two supported systems returns the same reference.
+- **SC-002**: The same physical point expressed in both supported systems returns the same reference.
 - **SC-003**: 100% of malformed or out-of-range requests are rejected with a clear 400 without any call to the Cadastre.
 - **SC-004**: 100% of Cadastre failure modes tested (no parcel, rejected input, unavailable, slow) map to the documented status and error code.
 - **SC-005**: The endpoint, with parameters and errors, appears in the interactive documentation and in the published OpenAPI file with no manual steps.
@@ -128,7 +136,7 @@ The new endpoint appears in `/docs`, `/openapi.json` and the Apify Endpoints tab
 ## Assumptions
 
 - The Cadastre coordinate service stays free, public and on the same host as the services already used; the HTTP GET binding is used, as in SPEC-001.
-- Pass-through of coordinate values: conversion between reference systems is done by the Cadastre, not by this API.
+- Coordinate values are passed through unchanged; the Cadastre resolves the point (longitude is sent as its X, latitude as its Y).
 - The Cadastre returns a parcel (14-character) reference, not a property (20-character) reference; one point maps to at most one parcel.
 - Only a single point is queried per request; batch conversion is out of scope.
 - Nearest-parcels search, reverse geocoding of free text, and drawing of parcel geometry are out of scope.
