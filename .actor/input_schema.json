@@ -1,8 +1,9 @@
 {
     "$schema": "https://apify.com/schemas/v1/input.ide.json",
-    "title": "Actor input",
+    "title": "Catastro REST API input",
     "type": "object",
     "schemaVersion": 1,
     "properties": {},
-    "required": []
+    "required": [],
+    "description": "This Actor runs in Standby mode and takes no input; call GET /properties/{reference} on the Standby URL. Tunables are environment variables (see README)."
 }
