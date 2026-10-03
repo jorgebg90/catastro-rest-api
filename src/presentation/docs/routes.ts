@@ -7,15 +7,18 @@ export type HandlerKey =
     | 'streets'
     | 'streetNumbers'
     | 'properties'
-    | 'propertyByReference';
+    | 'propertyByReference'
+    | 'referenceByCoordinates';
 
 export interface ParamDoc {
     readonly name: string;
     readonly in: 'query' | 'path';
     readonly required: boolean;
-    readonly type: 'string' | 'integer';
+    readonly type: 'string' | 'integer' | 'number';
     readonly description: string;
     readonly example: string;
+    readonly enum?: readonly string[];
+    readonly default?: string;
 }
 
 export interface RouteDef {
@@ -179,6 +182,45 @@ export const ROUTES: readonly RouteDef[] = [
         response: { schema: 'PropertyByReference' },
         errorStatuses: [400, 404, 502, 504],
         exampleUrl: '/properties/9872023VH5797S0001WX',
+    },
+    {
+        method: 'GET',
+        path: '/coordinates/reference',
+        handler: 'referenceByCoordinates',
+        summary: 'Cadastral reference of the parcel containing a point',
+        description:
+            'Returns the 14-character cadastral reference of the parcel that contains the given longitude and latitude (upstream Consulta_RCCOOR). Use the result with GET /properties/{reference}. Points outside any parcel (for example on a street) return 404.',
+        parameters: [
+            {
+                name: 'longitude',
+                in: 'query',
+                required: true,
+                type: 'number',
+                description: 'Longitude in decimal degrees (-180 to 180), dot as decimal separator.',
+                example: '-3.70720',
+            },
+            {
+                name: 'latitude',
+                in: 'query',
+                required: true,
+                type: 'number',
+                description: 'Latitude in decimal degrees (-90 to 90), dot as decimal separator.',
+                example: '40.41446',
+            },
+            {
+                name: 'srs',
+                in: 'query',
+                required: false,
+                type: 'string',
+                description: 'Geographic reference system of the coordinates.',
+                example: 'EPSG:4326',
+                enum: ['EPSG:4326', 'EPSG:4258'],
+                default: 'EPSG:4326',
+            },
+        ],
+        response: { schema: 'ReferenceByCoordinates' },
+        errorStatuses: [400, 404, 502, 504],
+        exampleUrl: '/coordinates/reference?longitude=-3.70720&latitude=40.41446',
     },
 ];
 

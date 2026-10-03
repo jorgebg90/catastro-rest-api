@@ -5,6 +5,7 @@ import {
     InvalidCadastralReferenceError,
     InvalidQueryError,
     PropertyNotFoundError,
+    ReferenceNotFoundError,
 } from '../../domain/errors/index.js';
 
 export interface CadastreBusinessError {
@@ -29,16 +30,31 @@ export const mapCadastreErrors = (errors: readonly CadastreBusinessError[]): Dom
 
 const NOT_FOUND_CODES = new Set(['5', '10', '12', '33', '43']);
 const INVALID_CODES = new Set(['4', '17', '41']);
+const COORDINATE_NOT_FOUND_CODES = new Set(['16']);
+const COORDINATE_INVALID_CODES = new Set(['75', '77', '79']);
 
 const isNotFound = (e: CadastreBusinessError): boolean => NOT_FOUND_CODES.has(e.code) || /NO EXISTE|NO HAY COINCIDENCIAS/i.test(e.description);
 const isInvalid = (e: CadastreBusinessError): boolean => INVALID_CODES.has(e.code) || /OBLIGATORI/i.test(e.description);
+const isCoordinateNotFound = (e: CadastreBusinessError): boolean => COORDINATE_NOT_FOUND_CODES.has(e.code);
+const isCoordinateInvalid = (e: CadastreBusinessError): boolean => COORDINATE_INVALID_CODES.has(e.code);
 
-export type OperationKind = 'catalog' | 'property';
+export type OperationKind = 'catalog' | 'property' | 'coordinate';
 
 /** Maps business errors of the SPEC-001 operations: not found -> 404, rejected input -> 400, anything else -> protocol error (502). */
 export const mapOperationErrors = (errors: readonly CadastreBusinessError[], kind: OperationKind): DomainError => {
     const first = errors[0];
     if (first === undefined) return new CadastreProtocolError('Cadastre reported an error without details');
+
+    if (kind === 'coordinate') {
+        if (isCoordinateNotFound(first)) {
+            return new ReferenceNotFoundError('No reference found for the given coordinates', first.code, first.description);
+        }
+        if (isCoordinateInvalid(first)) {
+            return new InvalidQueryError('INVALID_PARAMETER', first.description || 'Query rejected by the Cadastre');
+        }
+        return new CadastreProtocolError(`Cadastre error ${first.code}: ${first.description}`);
+    }
+
     if (isNotFound(first)) {
         return kind === 'catalog'
             ? new CatalogEntryNotFoundError('No entries found for the given criteria', first.code, first.description)

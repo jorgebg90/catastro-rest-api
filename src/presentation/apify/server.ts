@@ -6,6 +6,7 @@ import type {
     IListStreetNumbersUseCase,
     IListStreetsUseCase,
 } from '../../application/ports/catalog-use-cases.js';
+import type { IFindReferenceByCoordinatesUseCase } from '../../application/ports/find-reference-by-coordinates-use-case.js';
 import type { IGetPropertyByRefUseCase } from '../../application/ports/get-property-by-ref-use-case.js';
 import type { ISearchPropertiesByAddressUseCase, ISearchPropertiesByParcelUseCase } from '../../application/ports/search-use-cases.js';
 import { err } from '../../domain/result.js';
@@ -22,11 +23,13 @@ import {
     toMunicipalitiesResponse,
     toPropertiesResponse,
     toProvincesResponse,
+    toReferenceResponse,
     toStreetNumbersResponse,
     toStreetsResponse,
 } from './http-mapper.js';
 import type { AppLogger } from './logger.js';
 import {
+    parseCoordinate,
     parseMunicipalityQuery,
     parsePropertySearch,
     parseReferenceInput,
@@ -42,6 +45,7 @@ export interface ServerDeps {
     readonly streetNumbers: IListStreetNumbersUseCase;
     readonly searchByAddress: ISearchPropertiesByAddressUseCase;
     readonly searchByParcel: ISearchPropertiesByParcelUseCase;
+    readonly referenceByCoordinates: IFindReferenceByCoordinatesUseCase;
     readonly logger: AppLogger;
 }
 
@@ -113,6 +117,13 @@ const HANDLERS: Readonly<Record<HandlerKey, (ctx: Ctx) => Promise<RouteResponse>
         return q.ok ? toStreetNumbersResponse(await deps.streetNumbers.execute(q.value)) : toErrorResponse(q.error);
     },
     properties: search,
+    referenceByCoordinates: async ({ deps, params }) => {
+        const c = parseCoordinate(params);
+        if (!c.ok) return toErrorResponse(c.error);
+        const response = toReferenceResponse(await deps.referenceByCoordinates.find(c.value));
+        deps.logger.info('Reference by coordinates', { status: response.status });
+        return response;
+    },
     propertyByReference: async ({ deps, pathParams }) => lookup(pathParams.reference ?? '', deps),
 };
 

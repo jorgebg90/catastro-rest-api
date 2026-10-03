@@ -1,5 +1,6 @@
 import type { Municipality, Province, Street, StreetNumberEntry } from '../../domain/entities/catalog.js';
 import type { PropertyRecord } from '../../domain/entities/property-record.js';
+import type { ReferenceMatch } from '../../domain/entities/reference-match.js';
 import {
     CadastreTimeoutError,
     CatalogEntryNotFoundError,
@@ -7,6 +8,7 @@ import {
     InvalidCadastralReferenceError,
     InvalidQueryError,
     PropertyNotFoundError,
+    ReferenceNotFoundError,
 } from '../../domain/errors/index.js';
 import type { Result } from '../../domain/result.js';
 
@@ -43,14 +45,14 @@ const serialize = (p: PropertyRecord) => ({
 
 const statusOf = (error: DomainError): number => {
     if (error instanceof InvalidCadastralReferenceError || error instanceof InvalidQueryError) return 400;
-    if (error instanceof PropertyNotFoundError || error instanceof CatalogEntryNotFoundError) return 404;
+    if (error instanceof PropertyNotFoundError || error instanceof CatalogEntryNotFoundError || error instanceof ReferenceNotFoundError) return 404;
     if (error instanceof CadastreTimeoutError) return 504;
     return 502;
 };
 
 export const toErrorResponse = (error: DomainError): HttpResponseData => {
     const body: Record<string, unknown> = { code: error.code, message: error.message };
-    if (error instanceof PropertyNotFoundError || error instanceof CatalogEntryNotFoundError) {
+    if (error instanceof PropertyNotFoundError || error instanceof CatalogEntryNotFoundError || error instanceof ReferenceNotFoundError) {
         body.upstream = { code: error.upstreamCode, description: error.upstreamDescription };
     }
     return { status: statusOf(error), body };
@@ -88,6 +90,20 @@ export const toStreetNumbersResponse = (r: Result<readonly StreetNumberEntry[], 
 
 export const toPropertiesResponse = (r: Result<readonly PropertyRecord[], DomainError>): HttpResponseData =>
     listResponse('properties', r, serialize);
+
+export const toReferenceResponse = (r: Result<ReferenceMatch, DomainError>): HttpResponseData =>
+    r.ok
+        ? {
+              status: 200,
+              body: {
+                  reference: r.value.reference,
+                  parcel: r.value.parcel,
+                  sheet: r.value.sheet,
+                  address: r.value.address,
+                  coordinate: { longitude: r.value.longitude, latitude: r.value.latitude, srs: r.value.srs },
+              },
+          }
+        : toErrorResponse(r.error);
 
 export const internalErrorResponse = (): HttpResponseData => ({
     status: 500,

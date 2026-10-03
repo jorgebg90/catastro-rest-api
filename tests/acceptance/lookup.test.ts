@@ -97,6 +97,7 @@ describe('GET /properties/{reference}', () => {
             streetNumbers: unused,
             searchByAddress: unused,
             searchByParcel: unused,
+            referenceByCoordinates: { find: async () => Promise.reject(new Error('unused')) },
             logger: { info: () => undefined, error: () => undefined },
         });
         await new Promise<void>((resolve) => {

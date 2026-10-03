@@ -22,6 +22,18 @@ export class PropertyNotFoundError extends DomainError {
     }
 }
 
+export class ReferenceNotFoundError extends DomainError {
+    public readonly code = 'COORDINATE_NOT_FOUND';
+
+    public constructor(
+        message: string,
+        public readonly upstreamCode: string | null = null,
+        public readonly upstreamDescription: string | null = null,
+    ) {
+        super(message);
+    }
+}
+
 export class CadastreTimeoutError extends DomainError {
     public readonly code = 'CADASTRE_TIMEOUT';
 
