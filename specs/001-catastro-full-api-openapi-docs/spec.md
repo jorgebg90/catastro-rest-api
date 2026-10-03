@@ -158,7 +158,7 @@ Scenario: [US4-S4] Documentation is reachable without extra setup
 - Accented and lowercase input (`alcalá`, `madrid`) is accepted for names; codes are compared as given.
 - Very large listings (all provinces, all streets of a big city) are returned complete; no pagination is introduced in this feature.
 - Upstream business-error codes differ per operation; any unmapped code is reported as an upstream protocol error rather than hidden.
-- Properties returned by address/parcel search follow the SPEC-000 distinction: a single match returns full detail, several matches return the list shape with location data only.
+- Properties returned by address/parcel search use the SPEC-000 `PropertyRecord` shape; when the upstream returns several matches, fields it does not provide are `null`/empty (never invented), consistent with SPEC-000 parcel-level references.
 - The documentation endpoints must not expose internal details (environment values, proxy URLs).
 
 ## Requirements *(mandatory)*

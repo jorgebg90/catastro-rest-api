@@ -7,14 +7,14 @@ paths:
   /provinces:
     get:
       summary: List provinces
-      responses: { '200': { $ref: '#/components/responses/List' }, '502': { $ref: '#/components/responses/Error' }, '504': { $ref: '#/components/responses/Error' } }
+      responses: { '200': { $ref: '#/components/responses/Provinces' }, '502': { $ref: '#/components/responses/Error' }, '504': { $ref: '#/components/responses/Error' } }
   /municipalities:
     get:
       summary: List municipalities of a province
       parameters:
         - { name: province, in: query, required: true, schema: { type: string } }
         - { name: municipality, in: query, required: false, schema: { type: string } }
-      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+      responses: { '200': { $ref: '#/components/responses/Municipalities' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
   /streets:
     get:
       summary: List streets of a municipality
@@ -23,7 +23,7 @@ paths:
         - { name: municipality, in: query, required: true, schema: { type: string } }
         - { name: streetType, in: query, required: false, schema: { type: string } }
         - { name: streetName, in: query, required: false, schema: { type: string } }
-      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+      responses: { '200': { $ref: '#/components/responses/Streets' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
   /street-numbers:
     get:
       summary: List street numbers
@@ -33,7 +33,7 @@ paths:
         - { name: streetType, in: query, required: true, schema: { type: string } }
         - { name: streetName, in: query, required: true, schema: { type: string } }
         - { name: number, in: query, required: true, schema: { type: integer } }
-      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+      responses: { '200': { $ref: '#/components/responses/StreetNumbers' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
   /properties:
     get:
       summary: Search properties by address or by polygon/parcel
@@ -50,22 +50,36 @@ paths:
         - { name: door, in: query, schema: { type: string } }
         - { name: polygon, in: query, schema: { type: integer } }
         - { name: parcel, in: query, schema: { type: integer } }
-      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+      responses: { '200': { $ref: '#/components/responses/Properties' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
   /properties/{reference}:
     get:
       summary: Property by cadastral reference (SPEC-000)
       parameters:
         - { name: reference, in: path, required: true, schema: { type: string } }
-      responses: { '200': { $ref: '#/components/responses/List' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
+      responses: { '200': { $ref: '#/components/responses/Properties' }, '400': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' } }
   /openapi.json:
     get: { summary: OpenAPI document, responses: { '200': { description: OpenAPI 3 JSON } } }
   /docs:
     get: { summary: HTML documentation, responses: { '200': { description: text/html } } }
 components:
   responses:
-    List: { description: OK, content: { application/json: { schema: { type: object } } } }
+    Provinces: { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ProvinceList' } } } }
+    Municipalities: { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/MunicipalityList' } } } }
+    Streets: { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/StreetList' } } } }
+    StreetNumbers: { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/StreetNumberList' } } } }
+    Properties: { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/PropertyList' } } } }
     Error: { description: Error, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
   schemas:
+    Province: { type: object, required: [code, name], properties: { code: { type: string }, name: { type: string } } }
+    ProvinceList: { type: object, properties: { provinces: { type: array, items: { $ref: '#/components/schemas/Province' } } } }
+    Municipality: { type: object, required: [name], properties: { cadastralCode: { type: string }, ineCode: { type: string }, provinceCode: { type: string }, name: { type: string } } }
+    MunicipalityList: { type: object, properties: { municipalities: { type: array, items: { $ref: '#/components/schemas/Municipality' } } } }
+    Street: { type: object, required: [name], properties: { code: { type: string }, type: { type: string }, name: { type: string } } }
+    StreetList: { type: object, properties: { streets: { type: array, items: { $ref: '#/components/schemas/Street' } } } }
+    StreetNumberEntry: { type: object, required: [number], properties: { number: { type: string }, cadastralReference14: { type: string } } }
+    StreetNumberList: { type: object, properties: { numbers: { type: array, items: { $ref: '#/components/schemas/StreetNumberEntry' } } } }
+    Property: { type: object, required: [reference, address], description: Same shape as SPEC-000 PropertyRecord, properties: { reference: { type: string }, address: { type: string }, propertyClass: { type: string, enum: [URBAN, RUSTIC], nullable: true }, provinceCode: { type: string, nullable: true }, municipalityCode: { type: string, nullable: true }, postalCode: { type: string, nullable: true }, use: { type: string, nullable: true }, surfaceSquareMeters: { type: number, nullable: true }, constructions: { type: array, items: { type: object } } } }
+    PropertyList: { type: object, properties: { properties: { type: array, items: { $ref: '#/components/schemas/Property' } } } }
     Error:
       type: object
       properties:
