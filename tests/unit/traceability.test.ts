@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const root = join(import.meta.dirname, '..', '..');
 const SPEC001_SCENARIO = /\b001:(US\d-S\d)\b/g;
+const SPEC002_SCENARIO = /\b002:(US\d-S\d)\b/g;
 
 const listTests = (dir: string): string[] =>
     readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -65,5 +66,20 @@ describe('SPEC-001 traceability (FR-010)', () => {
         );
         expect(useCases).toHaveLength(2);
         for (const f of useCases) expect(readFileSync(f, 'utf8')).toContain('SPEC-001');
+    });
+});
+
+describe('SPEC-002 traceability (FR-010)', () => {
+    const spec = readFileSync(join(root, 'specs/002-reference-by-coordinates/spec.md'), 'utf8');
+    const ids = new Set([...spec.matchAll(/\[(US\d-S\d)\]/g)].map((m) => m[1] as string));
+    const referenced = new Set<string>();
+    const sources = [...listTests(join(root, 'tests')), ...listSources(join(root, 'src'))];
+    for (const f of sources) {
+        for (const m of readFileSync(f, 'utf8').matchAll(SPEC002_SCENARIO)) referenced.add(m[1] as string);
+    }
+
+    it('every SPEC-002 scenario is referenced by a test as [002:USx-Sy]', () => {
+        expect(ids.size).toBeGreaterThan(0);
+        expect([...ids].filter((id) => !referenced.has(id))).toEqual([]);
     });
 });
