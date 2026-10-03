@@ -34,7 +34,7 @@ curl "https://<username>--catastro-rest-api.apify.actor/properties/9872023VH5797
 - **Coordinates order**: `longitude` comes first, `latitude` second, both in decimal degrees with a dot. Google Maps copies coordinates as `latitude, longitude`, so swap them. Example: Vigo is `longitude=-8.7194`, `latitude=42.2345`.
 - **Coordinates must fall inside a parcel**: a point in the middle of a street belongs to no parcel and returns 404.
 - **Street names are the Cadastre's own**: they use abbreviations and their own street types (for example `RU` + `DR CARLOS COLMEIRO LAFORE`). Search by a fragment first with `/streets?...&streetName=COLMEIRO`.
-- **Only public data**: ownership and cadastral values are never returned (see the [legal notice](#️-legal-disclaimer-and-terms-of-use) below).
+- **Only public data**: ownership and cadastral values are never returned (see the legal disclaimer at the end).
 
 ### 📝 Endpoints and input parameters
 
